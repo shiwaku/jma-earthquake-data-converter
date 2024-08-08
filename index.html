@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>気象庁 震度マップ（直近）</title>
+    <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
+    <!-- MapLibre -->
+    <script src='https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.js'></script>
+    <link href='https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.css' rel='stylesheet' />
+    <script src="https://unpkg.com/pmtiles@2.11.0/dist/index.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+        }
+
+        #map {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 100%;
+        }
+    </style>
+</head>
+
+<body>
+    <style>
+        .map-overlay {
+            font: 12px/20px 'Helvetica Neue', Arial, Helvetica, sans-serif;
+            position: absolute;
+            width: auto;
+            top: 0;
+            left: 0;
+            padding: 10px;
+        }
+
+        .map-overlay .map-overlay-inner {
+            background-color: #fff;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+            border-radius: 3px;
+            padding: 10px;
+            margin-bottom: 5px;
+        }
+
+        .map-overlay h3 {
+            line-height: 12px;
+            display: block;
+            margin: 0 0 10px;
+        }
+
+        .map-overlay .legend .bar {
+            height: 10px;
+            width: 100%;
+            background: linear-gradient(to right, #CCFFCC, #00ff00);
+        }
+
+        .map-overlay input {
+            background-color: transparent;
+            display: inline-block;
+            width: 100%;
+            position: relative;
+            margin: 0;
+            cursor: ew-resize;
+        }
+
+        .maplibregl-popup .maplibregl-popup-content {
+            padding: 8px 10px;
+            font: 12px/14px Arial, Helvetica, sans-serif;
+            color: black;
+            background: white;
+            background: rgba(255, 255, 255, 0.9);
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.9);
+            border-radius: 5px;
+            width: 220px;
+            height: 130px;
+            /*overflow: scroll;*/
+        }
+
+        .label-large {
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        th,
+        td {
+            border: none;
+        }
+
+        table {
+            font-size: 10pt;
+            border-collapse: collapse;
+        }
+
+        .legend-1 {
+            background-color: #fff;
+            border-radius: 3px;
+            bottom: 50px;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.10);
+            font: 12px/20px 'Helvetica Neue', Arial, Helvetica, sans-serif;
+            padding: 10px;
+            position: absolute;
+            right: 10px;
+            z-index: 1;
+            line-height: 16px;
+            height: 180px;
+        }
+
+        .legend-1 h4 {
+            margin: 0 0 10px;
+        }
+
+        .legend-1 div span {
+            border-radius: 50%;
+            display: inline-block;
+            height: 15px;
+            margin-right: 10px;
+            width: 15px;
+            color: orangered
+        }
+
+        .legend-2 {
+            background-color: #fff;
+            border-radius: 3px;
+            bottom: 50px;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.10);
+            font: 12px/20px 'Helvetica Neue', Arial, Helvetica, sans-serif;
+            padding: 10px;
+            position: absolute;
+            right: 10px;
+            z-index: 1;
+            line-height: 16px;
+            height: 220px;
+        }
+
+        .legend-2 h4 {
+            margin: 0 0 10px;
+        }
+
+        .legend-2 div span {
+            border-radius: 50%;
+            display: inline-block;
+            height: 15px;
+            margin-right: 10px;
+            width: 15px;
+            color: orangered
+        }
+
+        .circle {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+
+        .square {
+            width: 14px;
+            height: 14px;
+        }
+
+        #earthquake {
+            padding: 3px 4px;
+            font: 12px/20px Arial, Helvetica, sans-serif;
+            color: black;
+            background: white;
+            background: rgba(255, 255, 255, 1);
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+            border-radius: 5px;
+            width: fit-content;
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            z-index: 10;
+        }
+    </style>
+
+    <div id="map"></div>
+    <!--
+    <div class="map-overlay top">
+        <div class="map-overlay-inner">
+            <h3>気象庁 震度マップ（直近M6.5以上・震度7以上）</h3>
+            使用データ：<br>
+            <a href="https://www.data.jma.go.jp/svd/eqev/data/bulletin/shindo.html" target="_blank" rel="noopener">気象庁
+                地震月報(カタログ編) 震度データ</a>
+        </div>
+    </div>
+    -->
+    <div id="earthquake">
+        <label><b><big>気象庁 震度マップ（直近）</big></b></label><br>
+        <label><b>表示する地震の種類</b></label><br>
+        <select id="id" onchange="SelectMap()">
+            <option value="19830526115957">1983年05月26日,秋田県沖,M7.8,最大震度5,深さ14km</option>
+            <option value="19930712221711">1993年07月12日,北海道南西沖,M7.7,最大震度5,深さ35km</option>
+            <option value="19950117054651">1995年01月17日,大阪湾,M7,最大震度7,深さ16km</option>
+            <option value="20030926045007">2003年09月26日,十勝沖,M8.0,最大震度6弱,深さ45km</option>
+            <option value="20041023175600">2004年10月23日,新潟県中越地方,M6.8,最大震度7,深さ13km</option>
+            <option value="20070716101322">2007年07月16日,新潟県上中越沖,M6.8,最大震度6強,深さ17km</option>
+            <option value="20110311144618">2011年03月11日,三陸沖,M9,最大震度7,深さ24km</option>
+            <option value="20160414212634">2016年04月14日,熊本県熊本地方,M6.5,最大震度7,深さ11km</option>
+            <option value="20160416012505">2016年04月16日,熊本県熊本地方,M7.3,最大震度7,深さ12km</option>
+            <option value="20180618075834">2018年06月18日,大阪府北部,M6.1,最大震度6弱,深さ13km</option>
+            <option value="20180906030759">2018年09月06日,胆振地方中東部,M6.7,最大震度7,深さ37km</option>
+        </select>
+    </div>
+    <div id='legend-1' style="display:block;" class='legend-1'>
+        <h4>凡例</h4>
+        <div style="display: inline-block;">
+            <svg width="16" height="16">
+                <line x1="0" y1="0" x2="16" y2="16" stroke="yellow" stroke-width="6" stroke-linecap="square"
+                    stroke-linejoin="miter" />
+                <line x1="16" y1="0" x2="0" y2="16" stroke="yellow" stroke-width="6" stroke-linecap="square"
+                    stroke-linejoin="miter" />
+                <line x1="0" y1="0" x2="16" y2="16" stroke="red" stroke-width="3" stroke-linecap="square"
+                    stroke-linejoin="miter" />
+                <line x1="16" y1="0" x2="0" y2="16" stroke="red" stroke-width="3" stroke-linecap="square"
+                    stroke-linejoin="miter" />
+            </svg>
+        </div>
+        <span style="display: inline-block; margin-left: 5px;">震央</span><br>
+        <div class="circle"
+            style='background-color: rgb(255, 40, 0); display: inline-block; border: 1px solid rgba(0, 0, 0, 0.5); border-radius: 50%;'>
+        </div>
+        <span style="display: inline-block; margin-left: 5px;">震度6</span><br>
+        <div class="circle"
+            style='background-color: rgb(250, 230, 0); display: inline-block; border: 1px solid rgba(0, 0, 0, 0.5); border-radius: 50%;'>
+        </div>
+        <span style="display: inline-block; margin-left: 5px;">震度5</span><br>
+        <div class="circle"
+            style='background-color: rgb(250, 230, 150); display: inline-block; border: 1px solid rgba(0, 0, 0, 0.5); border-radius: 50%;'>
+        </div>
+        <span style="display: inline-block; margin-left: 5px;">震度4</span><br>
+        <div class="circle"
+            style='background-color: rgb(0, 65, 255); display: inline-block; border: 1px solid rgba(0, 0, 0, 0.5); border-radius: 50%;'>
+        </div>
+        <span style="display: inline-block; margin-left: 5px;">震度3</span><br>
+        <div class="circle"
+            style='background-color: rgb(0, 170, 255); display: inline-block; border: 1px solid rgba(0, 0, 0, 0.5); border-radius: 50%;'>
+        </div>
+        <span style="display: inline-block; margin-left:5px;">震度2</span><br>
+        <div class="circle"
+            style='background-color: rgb(255, 255, 255); display: inline-block; border: 1px solid rgba(0, 0, 0, 0.5); border-radius: 50%;'>
+        </div>
+        <span style="display: inline-block; margin-left: 5px;">震度1</span><br>
+        <div class="square" style='background-color: rgba(255, 191, 0, 0.3);display: inline-block;'></div>
+        <span style="display: inline-block; margin-left: 5px;">人口集中地区<br>&nbsp;&nbsp;&nbsp;&nbsp;（2020年）</span>
+    </div>
+    <div id='legend-2' style="display:none;" class='legend-2'>
+        <h4>凡例</h4>
+        <div style="display: inline-block;">
+            <svg width="16" height="16">
+                <line x1="0" y1="0" x2="16" y2="16" stroke="yellow" stroke-width="6" stroke-linecap="square"
+                    stroke-linejoin="miter" />
+                <line x1="16" y1="0" x2="0" y2="16" stroke="yellow" stroke-width="6" stroke-linecap="square"
+                    stroke-linejoin="miter" />
+                <line x1="0" y1="0" x2="16" y2="16" stroke="red" stroke-width="3" stroke-linecap="square"
+                    stroke-linejoin="miter" />
+                <line x1="16" y1="0" x2="0" y2="16" stroke="red" stroke-width="3" stroke-linecap="square"
+                    stroke-linejoin="miter" />
+            </svg>
+        </div>
+        <span style="display: inline-block; margin-left: 5px;">震央</span><br>
+        <div class="circle"
+            style='background-color: rgb(180, 0, 140); display: inline-block; border: 1px solid rgba(0, 0, 0, 0.5); border-radius: 50%;'>
+        </div>
+        <span style="display: inline-block; margin-left: 5px;">震度7</span><br>
+        <div class="circle"
+            style='background-color: rgb(165, 0, 33); display: inline-block; border: 1px solid rgba(0, 0, 0, 0.5); border-radius: 50%;'>
+        </div>
+        <span style="display: inline-block; margin-left: 5px;">震度6強</span><br>
+        <div class="circle"
+            style='background-color: rgb(255, 40, 0); display: inline-block; border: 1px solid rgba(0, 0, 0, 0.5); border-radius: 50%;'>
+        </div>
+        <span style="display: inline-block; margin-left: 5px;">震度6弱</span><br>
+        <div class="circle"
+            style='background-color: rgb(255, 153, 0); display: inline-block; border: 1px solid rgba(0, 0, 0, 0.5); border-radius: 50%;'>
+        </div>
+        <span style="display: inline-block; margin-left: 5px;">震度5強</span><br>
+        <div class="circle"
+            style='background-color: rgb(250, 230, 0); display: inline-block; border: 1px solid rgba(0, 0, 0, 0.5); border-radius: 50%;'>
+        </div>
+        <span style="display: inline-block; margin-left: 5px;">震度5弱</span><br>
+        <div class="circle"
+            style='background-color: rgb(250, 230, 150); display: inline-block; border: 1px solid rgba(0, 0, 0, 0.5); border-radius: 50%;'>
+        </div>
+        <span style="display: inline-block; margin-left: 5px;">震度4</span><br>
+        <div class="circle"
+            style='background-color: rgb(0, 65, 255); display: inline-block; border: 1px solid rgba(0, 0, 0, 0.5); border-radius: 50%;'>
+        </div>
+        <span style="display: inline-block; margin-left: 5px;">震度3</span><br>
+        <div class="circle"
+            style='background-color: rgb(0, 170, 255); display: inline-block; border: 1px solid rgba(0, 0, 0, 0.5); border-radius: 50%;'>
+        </div>
+        <span style="display: inline-block; margin-left:5px;">震度2</span><br>
+        <div class="circle"
+            style='background-color: rgb(255, 255, 255); display: inline-block; border: 1px solid rgba(0, 0, 0, 0.5); border-radius: 50%;'>
+        </div>
+        <span style="display: inline-block; margin-left: 5px;">震度1</span><br>
+        <div class="square" style='background-color: rgba(255, 191, 0, 0.3);display: inline-block;'></div>
+        <span style="display: inline-block; margin-left: 5px;">人口集中地区<br>&nbsp;&nbsp;&nbsp;&nbsp;（2020年）</span>
+    </div>
+    <script type="text/javascript">
+        // addProtocolの設定
+        let protocol = new pmtiles.Protocol();
+        maplibregl.addProtocol("pmtiles", protocol.tile);
+
+        // マップの初期化
+        var map = new maplibregl.Map({
+            container: 'map',
+            // style: './dark.json',
+            // style: 'https://tile2.openstreetmap.jp/styles/osm-bright/style.json',
+            style: 'https://tile.openstreetmap.jp/styles/maptiler-basic-ja/style.json',
+            center: [140.283, 39.934],
+            zoom: 7.65,
+            pitch: 0,
+            hash: true,
+            attributionControl: false
+        })
+
+        // ズーム・回転
+        map.addControl(new maplibregl.NavigationControl(), 'top-right');
+
+        // 現在位置表示
+        map.addControl(new maplibregl.GeolocateControl({
+            positionOptions: {
+                enableHighAccuracy: false
+            },
+            fitBoundsOptions: { maxZoom: 18 },
+            trackUserLocation: true,
+            showUserLocation: true
+        }), 'top-right');
+
+        // フルスクリーンモードのオンオフ
+        map.addControl(new maplibregl.FullscreenControl(), 'top-right');
+
+        // スケール表示
+        map.addControl(new maplibregl.ScaleControl({
+            maxWidth: 200,
+            unit: 'metric'
+        }), 'bottom-left');
+
+        // Attributionを折りたたみ表示
+        map.addControl(new maplibregl.AttributionControl({
+            compact: true,
+            customAttribution: '（<a href="https://twitter.com/shi__works" target="_blank">Twitter</a> | <a href="https://github.com/shi-works/jma-earthquake-data-converter" target="_blank">Github</a>） '
+        }));
+
+        map.on('load', () => {
+            // 人口集中地区ソース
+            map.addSource("did", {
+                type: "vector",
+                url: "pmtiles://https://xs489works.xsrv.jp/pmtiles-data/r2DID/2020_did_ddsw_01-47_JGD2011.pmtiles",
+                attribution: '<a href="https://www.e-stat.go.jp/gis">政府統計の総合窓口[e-Stat] 人口集中地区（2020年）</a>'
+            });
+
+            // 人口集中地区ポリゴンレイヤ
+            map.addLayer({
+                "id": "did-polygon",
+                "source": "did",
+                "source-layer": "2020_did_ddsw_0147_JGD2011fgb",
+                "type": "fill",
+                "paint": {
+                    'fill-color': 'rgb(255, 191, 0)',
+                    'fill-opacity': 0.3
+                }
+            });
+
+            // 気象庁 震度ソース
+            map.addSource("shindo", {
+                type: "vector",
+                url: "pmtiles://https://xs489works.xsrv.jp/pmtiles-data/jma-earthquake/shindo_convert.pmtiles",
+                attribution: '<a href="https://www.data.jma.go.jp/svd/eqev/data/bulletin/shindo.html">気象庁 地震月報(カタログ編) 震度データを加工して作成</a>'
+            });
+
+            // 気象庁 震度ポイントレイヤ
+            map.addLayer({
+                'id': 'shindo-points-1',
+                'type': 'circle',
+                'source': 'shindo',
+                "source-layer": "shindo_convertfgb",
+                'paint': {
+                    'circle-color': [
+                        'match',
+                        ['get', '震度'],
+                        '1', 'rgba(255, 255, 255, 1)',
+                        '2', 'rgba(0, 170, 255, 1)',
+                        '3', 'rgba(0, 65, 255, 1)',
+                        '4', 'rgba(250, 230, 150, 1)',
+                        '5', 'rgba(250, 230, 0, 1)',
+                        '5-', 'rgba(250, 230, 0, 1)',
+                        '5+', 'rgba(255, 153, 0, 1)',
+                        '6', 'rgba(255, 40, 0, 1)',
+                        '6-', 'rgba(255, 40, 0, 1)',
+                        '6+', 'rgba(165, 0, 33, 1)',
+                        '7', 'rgba(180, 0, 140, 1)',
+                        'rgba(0, 0, 0, 0)'
+                    ],
+                    'circle-radius': [
+                        'step',
+                        ['zoom'],
+                        5,
+                        7.5, 9
+                    ],
+                    'circle-stroke-color': 'rgba(0, 0, 0, 0.5)',
+                    'circle-stroke-width': 1,
+                    'circle-opacity': 1
+                },
+                'filter': ['==', ['get', '地震ID'], '19830526115957']
+            });
+
+            // 気象庁 震度ラベルレイヤ
+            map.addLayer({
+                'id': 'shindo-labels-1',
+                'type': 'symbol',
+                'source': 'shindo',
+                "source-layer": "shindo_convertfgb",
+                'layout': {
+                    'text-field': ['get', '震度'],
+                    'text-font': ['DIN Offc Pro Bold', 'Arial Unicode MS Black'],
+                    'text-size': 16,
+                    'text-allow-overlap': true
+                },
+                'paint': {
+                    'text-color': [
+                        'match',
+                        ['get', '震度'],
+                        '1', 'rgba(0, 0, 0, 1)',
+                        '2', 'rgba(0, 0, 0, 1)',
+                        '3', 'rgba(255, 255, 255, 1)',
+                        '4', 'rgba(0, 0, 0, 1)',
+                        '5', 'rgba(0, 0, 0, 1)',
+                        '5-', 'rgba(0, 0, 0, 1)',
+                        '5+', 'rgba(0, 0, 0, 1)',
+                        '6', 'rgba(255, 255, 255, 1)',
+                        '6-', 'rgba(255, 255, 255, 1)',
+                        '6+', 'rgba(255, 255, 255, 1)',
+                        '7', 'rgba(255, 255, 255, 1)',
+                        'rgba(0, 0, 0, 1)'
+                    ],
+                    'text-opacity': [
+                        'step',
+                        ['zoom'],
+                        0,
+                        7.5, 1
+                    ]
+                },
+                'filter': ['==', ['get', '地震ID'], '19830526115957']
+            });
+
+            // 気象庁 震源ソース
+            map.addSource("hypo", {
+                type: "vector",
+                url: "pmtiles://https://xs489works.xsrv.jp/pmtiles-data/jma-earthquake/hypocenter_convert.pmtiles",
+                attribution: '<a href="https://www.data.jma.go.jp/svd/eqev/data/bulletin/shindo.html">気象庁 地震月報(カタログ編) 震度データを加工して作成</a>'
+            });
+
+            // 気象庁 震源ポイントレイヤ
+            map.addLayer({
+                'id': 'hypo-points-1',
+                'type': 'symbol',
+                'source': 'hypo',
+                "source-layer": "hypocenter_convertfgb",
+                'layout': {
+                    'text-field': '×',
+                    'text-font': ['DIN Offc Pro Bold'],
+                    'text-size': 50,
+                    'text-allow-overlap': true
+                },
+                'paint': {
+                    'text-color': 'rgba(255, 0, 0, 1)',
+                    'text-halo-color': 'rgba(255, 255, 0, 1)',
+                    'text-halo-width': 2
+                },
+                'filter': ['==', ['get', '地震ID'], '19830526115957']
+            });
+
+        });
+
+        // マップの中心座標を設定
+        function getMapCenter(CenterText) {
+            const CenterTable = {
+                // キー：id、値：緯度、経度、ズームレベル
+                '19830526115957': [39.934, 140.283, 7.65],
+                '19930712221711': [42.666, 140.451, 7.53],
+                '19950117054651': [34.553, 134.998, 7.85],
+                '20030926045007': [42.639, 143.221, 7.69],
+                '20041023175600': [37.31, 138.721, 8.29],
+                '20070716101322': [37.5568, 138.61, 8.29],
+                '20110311144618': [38.398, 141.315, 7.7],
+                '20160414212634': [32.7872, 130.8207, 8.74],
+                '20160416012505': [32.7872, 130.8207, 8.74],
+                '20180618075834': [34.8443, 135.622, 8.69],
+                '20180906030759': [42.665, 141.9464, 8.69]
+            };
+            return CenterTable[CenterText];
+        }
+
+        // プルダウン時の処理
+        function SelectMap() {
+            var id = document.getElementById('id').value;
+            var year = id.substring(0, 4);
+
+            // 一旦、各レイヤを削除
+            if (map.getLayer('shindo-points-1')) map.removeLayer('shindo-points-1');
+            if (map.getLayer('shindo-labels-1')) map.removeLayer('shindo-labels-1');
+            if (map.getLayer('hypo-points-1')) map.removeLayer('hypo-points-1');
+
+            // 市区町村名を引数として関数を呼び出し、返された値を変数に代入
+            const locationInfo = getMapCenter(id);
+
+            // 値を緯度、経度、ズームレベルにそれぞれ代入
+            const latitude = locationInfo[0];
+            const longitude = locationInfo[1];
+            const zoomlevel = locationInfo[2];
+
+            // マップの中心座標へ遷移
+            map.flyTo({
+                center: [longitude, latitude],
+                zoom: zoomlevel
+            });
+
+            // 気象庁 震度ポイントレイヤ
+            map.addLayer({
+                'id': 'shindo-points-1',
+                'type': 'circle',
+                'source': 'shindo',
+                "source-layer": "shindo_convertfgb",
+                'paint': {
+                    'circle-color': [
+                        'match',
+                        ['get', '震度'],
+                        '1', 'rgba(255, 255, 255, 1)',
+                        '2', 'rgba(0, 170, 255, 1)',
+                        '3', 'rgba(0, 65, 255, 1)',
+                        '4', 'rgba(250, 230, 150, 1)',
+                        '5', 'rgba(250, 230, 0, 1)',
+                        '5-', 'rgba(250, 230, 0, 1)',
+                        '5+', 'rgba(255, 153, 0, 1)',
+                        '6', 'rgba(255, 40, 0, 1)',
+                        '6-', 'rgba(255, 40, 0, 1)',
+                        '6+', 'rgba(165, 0, 33, 1)',
+                        '7', 'rgba(180, 0, 140, 1)',
+                        'rgba(0, 0, 0, 0)' // fallback color if there's no match
+                    ],
+                    'circle-radius': [
+                        'step',
+                        ['zoom'],
+                        5, // default size
+                        7.5, 9 // at zoom level 7 and above, size will be 6
+                    ],
+                    'circle-stroke-color': 'rgba(0, 0, 0, 0.5)', // semi-transparent black stroke
+                    'circle-stroke-width': 1, // stroke width of 1 pixel
+                    'circle-opacity': 1
+                },
+                'filter': ['==', ['get', '地震ID'], id]
+            });
+
+            // 気象庁 震度ラベルレイヤ
+            map.addLayer({
+                'id': 'shindo-labels-1',
+                'type': 'symbol',
+                'source': 'shindo',
+                "source-layer": "shindo_convertfgb",
+                'layout': {
+                    'text-field': ['get', '震度'],
+                    'text-font': ['DIN Offc Pro Bold', 'Arial Unicode MS Black'],
+                    'text-size': 16,
+                    'text-allow-overlap': true
+                },
+                'paint': {
+                    'text-color': [
+                        'match',
+                        ['get', '震度'],
+                        '1', 'rgba(0, 0, 0, 1)',
+                        '2', 'rgba(0, 0, 0, 1)',
+                        '3', 'rgba(255, 255, 255, 1)',
+                        '4', 'rgba(0, 0, 0, 1)',
+                        '5', 'rgba(0, 0, 0, 1)',
+                        '5-', 'rgba(0, 0, 0, 1)',
+                        '5+', 'rgba(0, 0, 0, 1)',
+                        '6', 'rgba(255, 255, 255, 1)',
+                        '6-', 'rgba(255, 255, 255, 1)',
+                        '6+', 'rgba(255, 255, 255, 1)',
+                        '7', 'rgba(255, 255, 255, 1)',
+                        'rgba(0, 0, 0, 1)' // fallback color if there's no match
+                    ],
+                    'text-opacity': [
+                        'step',
+                        ['zoom'],
+                        0, // default opacity
+                        7.5, 1 // at zoom level 7 and above, opacity will be 1
+                    ]
+                },
+                'filter': ['==', ['get', '地震ID'], id]
+            });
+
+            // 気象庁 震源ポイントレイヤ
+            map.addLayer({
+                'id': 'hypo-points-1',
+                'type': 'symbol',
+                'source': 'hypo',
+                "source-layer": "hypocenter_convertfgb",
+                'layout': {
+                    'text-field': '×', // シンボルマークに表示される文字
+                    'text-font': ['DIN Offc Pro Bold'], // 使用するフォント
+                    'text-size': 50, // 文字サイズ
+                    'text-allow-overlap': true // 他の要素との重なりを許可
+                },
+                'paint': {
+                    'text-color': 'rgba(255, 0, 0, 1)', // シンボルマークの色
+                    'text-halo-color': 'rgba(255, 255, 0, 1)', // テキストの縁の色
+                    'text-halo-width': 2 // テキストの縁の幅
+                },
+                'filter': ['==', ['get', '地震ID'], id]
+            });
+
+            // 凡例の表示切り替え
+            if (year < 1996) {
+                // 1996年以前
+                document.querySelector('#legend-1').style.display = 'block';
+                document.querySelector('#legend-2').style.display = 'none';
+            }
+            else {
+                // 1996年以降
+                document.querySelector('#legend-1').style.display = 'none';
+                document.querySelector('#legend-2').style.display = 'block';
+            }
+        }
+
+        // 気象庁 震源クリック時のポップアップ表示
+        map.on('click', 'hypo-points-1', (e) => {
+            var lng = e.lngLat.lng;
+            var lat = e.lngLat.lat;
+            var shinouchimei = e.features[0].properties['震央地名'];
+            var id = e.features[0].properties['地震ID'].substring(0, 19);
+            var datetime = e.features[0].properties['DateTime'].substring(0, 19);
+            var depth = Math.round(parseFloat(e.features[0].properties['深さ(km)']));
+            var mag = e.features[0].properties['マグニチュード1'];
+            var maxshindo = e.features[0].properties['最大震度'];
+            new maplibregl.Popup()
+                .setLngLat(e.lngLat)
+                .setHTML(
+                    '<b style="color: red;">' + '<big>' + shinouchimei + '</big>' + '</b>' + '<br>' +
+                    '<table>' +
+                    '<tr>' +
+                    '<th style="width: 80px;"></th>' +
+                    '<th style="width: 130px;"></th>' +
+                    '</tr>' +
+                    '<th overflow: hidden;>' + '</th> ' + '<th overflow: hidden;>' + '</th> ' +
+                    '<tr>' +
+                    '<td style="text-align:right;">地震ID：</td>' +
+                    '<td style="text-align:left;"><b>' + id + '</b></td>' +
+                    '</tr>' +
+                    '<tr>' +
+                    '<td style="text-align:right;">発生日時：</td>' +
+                    '<td style="text-align:left;"><b>' + datetime + '</b></td>' +
+                    '</tr>' +
+                    '<tr>' +
+                    '<td style="text-align:right;">深さ：</td>' +
+                    '<td style="text-align:left;"><b>' + depth + ' km' + '</b></td>' +
+                    '</tr>' +
+                    '<tr>' +
+                    '<td style="text-align:right;">M：</td>' +
+                    '<td style="text-align:left;"><b>' + mag + '</b></td>' +
+                    '</tr>' +
+                    '<tr>' +
+                    '<td style="text-align:right;">最大震度：</td>' +
+                    '<td style="text-align:left;"><b>' + '震度' + maxshindo + '</b></td>' +
+                    '</tr>' +
+                    '<table>'
+                    + '<a href="https://www.data.jma.go.jp/svd/eqdb/data/shindo/index.html#' + id + '" target="_blank">🔎気象庁 震度データベース検索</a>' + '<br>'
+                    + '<a href=\https://www.google.com/maps?q=' + lat + "," + lng + "&hl=ja' target='_blank'>🌎Google Maps</a>" + ' '
+                )
+                .addTo(map);
+        });
+
+        // 気象庁 震度クリック時のポップアップ表示
+        map.on('click', 'shindo-points-1', (e) => {
+            var lng = e.lngLat.lng;
+            var lat = e.lngLat.lat;
+            var meisyou = e.features[0].properties['震度発表名称'];
+            var id = e.features[0].properties['地震ID'];
+            var kansoku = e.features[0].properties['観測点番号'];
+            var shindo = e.features[0].properties['震度'];
+            var keisokushindo = e.features[0].properties['震度（計測値）'];
+
+            new maplibregl.Popup()
+                .setLngLat(e.lngLat)
+                .setHTML(
+                    '<b>' + '<big>' + meisyou + '</big>' + '</b>' + '<br>' +
+                    '<table>' +
+                    '<tr>' +
+                    '<th style="width: 80px;"></th>' +
+                    '<th style="width: 130px;"></th>' +
+                    '</tr>' +
+                    '<tr>' +
+                    '<td style="text-align:right;">観測点番号：</td>' +
+                    '<td style="text-align:left;"><b>' + kansoku + '</b></td>' +
+                    '</tr>' +
+                    '<th overflow: hidden;>' + '</th> ' + '<th overflow: hidden;>' + '</th> ' +
+                    '<tr>' +
+                    '<td style="text-align:right;">地震ID：</td>' +
+                    '<td style="text-align:left;"><b>' + id + '</b></td>' +
+                    '</tr>' +
+                    '<tr>' +
+                    '<td style="text-align:right;">震度：</td>' +
+                    '<td style="text-align:left;"><b>' + shindo + '</b></td>' +
+                    '</tr>' +
+                    '<tr>' +
+                    '<td style="text-align:right;">計測震度：</td>' +
+                    '<td style="text-align:left;"><b>' + keisokushindo + '</b></td>' +
+                    '</tr>' +
+                    '<table>'
+                    + '<a href=\https://www.google.com/maps?q=' + lat + "," + lng + "&hl=ja' target='_blank'>🌎Google Maps</a>" + ' '
+                )
+                .addTo(map);
+        });
+    </script>
+
+</body>
+
+</html>
