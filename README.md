@@ -97,7 +97,7 @@ FaltGeobuf形式から[PMTiles形式](https://github.com/protomaps/PMTiles)へ�
 
 ## デモサイト
 - MapLibre GL JSで構築
-- https://shi-works.github.io/jma-earthquake-data-converter/
+- https://shiwaku.github.io/jma-earthquake-data-converter/
 - サンプル画像
 ![image](https://github.com/shi-works/jma-earthquake-data-converter/assets/71203808/1c06cc86-f8a3-48ca-8971-1de10550a864)
 ### 使用データ
