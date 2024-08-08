@@ -12,9 +12,9 @@
 ## 震度観測点一覧を読みやすい形式へ変換（code_p2csv.py）
 - 震度観測点一覧（datファイル）を読みやすい形式（csvファイル）に変換するプログラムです。
 ### 使用データ
-`https://github.com/shiwaku/jma-earthquake-data-converter/blob/main/data/code_p.dat`
+[https://github.com/shiwaku/jma-earthquake-data-converter/blob/main/data/code_p.dat](https://github.com/shiwaku/jma-earthquake-data-converter/blob/main/data/code_p.dat)
 ### 出力結果
-`https://github.com/shiwaku/jma-earthquake-data-converter/blob/main/data/code_p.csv`
+[https://github.com/shiwaku/jma-earthquake-data-converter/blob/main/data/code_p.csv](https://github.com/shiwaku/jma-earthquake-data-converter/blob/main/data/code_p.csv)
 
 ## 震源データ及び震度データの抽出（dat_converter.py）
 - 震度データ（datファイル）から震源データ（csvファイル）及び震度データ（csvファイル）を抽出するプログラムです。
@@ -24,9 +24,9 @@
 - 震度データ（datファイル）一式
 ### 出力結果
 #### 震源データ
-`https://xs489works.xsrv.jp/pmtiles-data/jma-earthquake/hypocenter.csv`,28.7MB
+[https://xs489works.xsrv.jp/pmtiles-data/jma-earthquake/hypocenter.csv](https://xs489works.xsrv.jp/pmtiles-data/jma-earthquake/hypocenter.csv),28.7MB
 #### 震度データ
-`https://xs489works.xsrv.jp/pmtiles-data/jma-earthquake/shindo.csv`,199.3MB
+[https://xs489works.xsrv.jp/pmtiles-data/jma-earthquake/shindo.csv](https://xs489works.xsrv.jp/pmtiles-data/jma-earthquake/shindo.csv),199.3MB
 
 ## 震源データを読みやすい形式へ変換（hypocenter_converter.py）
 - 震源データ（csvファイル）を読みやすい形式（csvファイル）に変換するプログラムです。
