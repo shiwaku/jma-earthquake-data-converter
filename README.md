@@ -34,9 +34,9 @@
 - 震源データの緯度(度)、緯度(分)、経度(度)、経度(分)よりLatitude、Longitudeを作成しています。
 - 属性情報は必要最小限にしていますので適宜改変してください。
 ### 使用データ
-`https://xs489works.xsrv.jp/pmtiles-data/jma-earthquake/hypocenter.csv`,28.7MB
+[https://xs489works.xsrv.jp/pmtiles-data/jma-earthquake/hypocenter.csv](https://xs489works.xsrv.jp/pmtiles-data/jma-earthquake/hypocenter.csv),28.7MB
 ### 出力結果
-`https://xs489works.xsrv.jp/pmtiles-data/jma-earthquake/hypocenter_convert.csv`,19.6MB
+[https://xs489works.xsrv.jp/pmtiles-data/jma-earthquake/hypocenter_convert.csv](https://xs489works.xsrv.jp/pmtiles-data/jma-earthquake/hypocenter_convert.csv),19.6MB
 
 ## 震度データを読みやすい形式へ変換（shindo_converter.py）
 - 震度データ（csvファイル）を読みやすい形式（csvファイル）に変換するプログラムです。
@@ -44,29 +44,29 @@
 - 震度データの地震ID（年月）と発現日、発現時、発現分、発現秒よりDatTimeを作成し、付与しています。
 - 属性情報は必要最小限にしていますので適宜改変してください。
 ### 使用データ
-`https://xs489works.xsrv.jp/pmtiles-data/jma-earthquake/shindo.csv`,199.3MB  
-`https://github.com/shi-works/jma-earthquake-data-converter/blob/main/data/code_p.csv`
+[https://xs489works.xsrv.jp/pmtiles-data/jma-earthquake/shindo.csv],199.3MB  
+[https://github.com/shiwaku/jma-earthquake-data-converter/blob/main/data/code_p.csv]
 ### 出力結果
-`https://xs489works.xsrv.jp/pmtiles-data/jma-earthquake/shindo_convert.csv`,180.2MB
+[https://xs489works.xsrv.jp/pmtiles-data/jma-earthquake/shindo_convert.csv](https://xs489works.xsrv.jp/pmtiles-data/jma-earthquake/shindo_convert.csv),180.2MB
 
 ## 震源データ及び震度データをGISデータ（FaltGeobuf形式及びGeoParquet形式）へ変換
 - 震源データ及び震度データのGISデータ（FaltGeobuf形式及びGeoParquet形式）への変換には[QGIS（バージョン3.28.4）](https://qgis.org/ja/site/)を使用します。
 ### 使用データ
 #### 震源データ
-`https://xs489works.xsrv.jp/pmtiles-data/jma-earthquake/hypocenter_convert.csv`,19.6MB
+[https://xs489works.xsrv.jp/pmtiles-data/jma-earthquake/hypocenter_convert.csv](https://xs489works.xsrv.jp/pmtiles-data/jma-earthquake/hypocenter_convert.csv),19.6MB
 #### 震度データ
-`https://xs489works.xsrv.jp/pmtiles-data/jma-earthquake/shindo_convert.csv`,180.2MB
+[https://xs489works.xsrv.jp/pmtiles-data/jma-earthquake/shindo_convert.csv](https://xs489works.xsrv.jp/pmtiles-data/jma-earthquake/shindo_convert.csv),180.2MB
 ### 出力結果（FaltGeobuf形式及びGeoParquet形式）
 #### 震源データ
 ##### FaltGeobuf形式
-`https://xs489works.xsrv.jp/pmtiles-data/jma-earthquake/hypocenter_convert.fgb`,51.6MB
+[https://xs489works.xsrv.jp/pmtiles-data/jma-earthquake/hypocenter_convert.fgb](https://xs489works.xsrv.jp/pmtiles-data/jma-earthquake/hypocenter_convert.fgb),51.6MB
 ##### GeoParquet形式
-`https://xs489works.xsrv.jp/pmtiles-data/jma-earthquake/hypocenter_convert.parquet`,8.5MB
+[https://xs489works.xsrv.jp/pmtiles-data/jma-earthquake/hypocenter_convert.parquet](https://xs489works.xsrv.jp/pmtiles-data/jma-earthquake/hypocenter_convert.parquet),8.5MB
 #### 震度データ
 ##### FaltGeobuf形式
-`https://xs489works.xsrv.jp/pmtiles-data/jma-earthquake/shindo_convert.fgb`,453.8MB
+[https://xs489works.xsrv.jp/pmtiles-data/jma-earthquake/shindo_convert.fgb](https://xs489works.xsrv.jp/pmtiles-data/jma-earthquake/shindo_convert.fgb),453.8MB
 ##### GeoParquet形式
-`https://xs489works.xsrv.jp/pmtiles-data/jma-earthquake/shindo_convert.parquet`,29.8MB
+[https://xs489works.xsrv.jp/pmtiles-data/jma-earthquake/shindo_convert.parquet](https://xs489works.xsrv.jp/pmtiles-data/jma-earthquake/shindo_convert.parquet),29.8MB
 
 ## FaltGeobuf形式からPMTiles形式への変換
 FaltGeobuf形式から[PMTiles形式](https://github.com/protomaps/PMTiles)への変換には[feltのtippecanoe](https://github.com/felt/tippecanoe)を使用します。
