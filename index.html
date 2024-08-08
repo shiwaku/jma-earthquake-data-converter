@@ -188,6 +188,7 @@
         <label><b><big>気象庁 震度マップ（直近）</big></b></label><br>
         <label><b>表示する地震の種類</b></label><br>
         <select id="id" onchange="SelectMap()">
+            <option value="19461221041904">1946年12月21日,和歌山県南方沖,M8.0,最大震度5,深さ14km</option>
             <option value="19830526115957">1983年05月26日,秋田県沖,M7.8,最大震度5,深さ14km</option>
             <option value="19930712221711">1993年07月12日,北海道南西沖,M7.7,最大震度5,深さ35km</option>
             <option value="19950117054651">1995年01月17日,大阪湾,M7,最大震度7,深さ16km</option>
@@ -308,8 +309,8 @@
             // style: './dark.json',
             // style: 'https://tile2.openstreetmap.jp/styles/osm-bright/style.json',
             style: 'https://tile.openstreetmap.jp/styles/maptiler-basic-ja/style.json',
-            center: [140.283, 39.934],
-            zoom: 7.65,
+            center: [135.196, 35.177],
+            zoom: 6.02,
             pitch: 0,
             hash: true,
             attributionControl: false
@@ -340,7 +341,7 @@
         // Attributionを折りたたみ表示
         map.addControl(new maplibregl.AttributionControl({
             compact: true,
-            customAttribution: '（<a href="https://twitter.com/shi__works" target="_blank">Twitter</a> | <a href="https://github.com/shi-works/jma-earthquake-data-converter" target="_blank">Github</a>） '
+            customAttribution: '（<a href="https://twitter.com/shi__works" target="_blank">X(旧Twitter)</a> | <a href="https://github.com/shiwaku/jma-earthquake-data-converter" target="_blank">Github</a>） '
         }));
 
         map.on('load', () => {
@@ -403,7 +404,7 @@
                     'circle-stroke-width': 1,
                     'circle-opacity': 1
                 },
-                'filter': ['==', ['get', '地震ID'], '19830526115957']
+                'filter': ['==', ['get', '地震ID'], '19461221041904']
             });
 
             // 気象庁 震度ラベルレイヤ
@@ -442,7 +443,7 @@
                         7.5, 1
                     ]
                 },
-                'filter': ['==', ['get', '地震ID'], '19830526115957']
+                'filter': ['==', ['get', '地震ID'], '19461221041904']
             });
 
             // 気象庁 震源ソース
@@ -469,7 +470,7 @@
                     'text-halo-color': 'rgba(255, 255, 0, 1)',
                     'text-halo-width': 2
                 },
-                'filter': ['==', ['get', '地震ID'], '19830526115957']
+                'filter': ['==', ['get', '地震ID'], '19461221041904']
             });
 
         });
@@ -478,6 +479,7 @@
         function getMapCenter(CenterText) {
             const CenterTable = {
                 // キー：id、値：緯度、経度、ズームレベル
+                '19461221041904': [35.177, 135.196, 6.02],
                 '19830526115957': [39.934, 140.283, 7.65],
                 '19930712221711': [42.666, 140.451, 7.53],
                 '19950117054651': [34.553, 134.998, 7.85],
