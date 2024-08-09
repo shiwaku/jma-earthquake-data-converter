@@ -24,9 +24,9 @@
 - 震度データ（datファイル）一式
 ### 出力結果
 #### 震源データ
-[https://xs489works.xsrv.jp/pmtiles-data/jma-earthquake/hypocenter.csv](https://xs489works.xsrv.jp/pmtiles-data/jma-earthquake/hypocenter.csv),28.7MB
+[https://xs489works.xsrv.jp/pmtiles-data/jma-earthquake/hypocenter.csv](https://xs489works.xsrv.jp/pmtiles-data/jma-earthquake/hypocenter.csv),30MB
 #### 震度データ
-[https://xs489works.xsrv.jp/pmtiles-data/jma-earthquake/shindo.csv](https://xs489works.xsrv.jp/pmtiles-data/jma-earthquake/shindo.csv),199.3MB
+[https://xs489works.xsrv.jp/pmtiles-data/jma-earthquake/shindo.csv](https://xs489works.xsrv.jp/pmtiles-data/jma-earthquake/shindo.csv),211MB
 
 ## 震源データを読みやすい形式へ変換（hypocenter_converter.py）
 - 震源データ（csvファイル）を読みやすい形式（csvファイル）に変換するプログラムです。
