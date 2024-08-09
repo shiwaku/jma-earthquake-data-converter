@@ -7,7 +7,7 @@
 - 以下の気象庁のサイトより地震月報(カタログ編)の震度データ（zip形式）や震度観測点一覧を入手します。
 - https://www.data.jma.go.jp/eqev/data/bulletin/shindo.html
 - なお、一括で震度データ（zip形式）をダウンロードするPythonスクリプトは以下にあります。
-- https://github.com/shi-works/jma-earthquake-data-converter/blob/main/src/shindo_zip_dl.py
+- https://github.com/shiwaku/jma-earthquake-data-converter/blob/main/src/shindo_zip_dl.py
 
 ## 震度観測点一覧を読みやすい形式へ変換（code_p2csv.py）
 - 震度観測点一覧（datファイル）を読みやすい形式（csvファイル）に変換するプログラムです。
