@@ -12,9 +12,9 @@
 ## 震度観測点一覧を読みやすい形式へ変換（code_p2csv.py）
 - 震度観測点一覧（datファイル）を読みやすい形式（csvファイル）に変換するプログラムです。
 ### 使用データ
-`https://github.com/shi-works/jma-earthquake-data-converter/blob/main/data/code_p.dat`
+[https://github.com/shiwaku/jma-earthquake-data-converter/blob/main/data/code_p.dat](https://github.com/shiwaku/jma-earthquake-data-converter/blob/main/data/code_p.dat)
 ### 出力結果
-`https://github.com/shi-works/jma-earthquake-data-converter/blob/main/data/code_p.csv`
+[https://github.com/shiwaku/jma-earthquake-data-converter/blob/main/data/code_p.csv](https://github.com/shiwaku/jma-earthquake-data-converter/blob/main/data/code_p.csv)
 
 ## 震源データ及び震度データの抽出（dat_converter.py）
 - 震度データ（datファイル）から震源データ（csvファイル）及び震度データ（csvファイル）を抽出するプログラムです。
@@ -24,9 +24,9 @@
 - 震度データ（datファイル）一式
 ### 出力結果
 #### 震源データ
-`https://xs489works.xsrv.jp/pmtiles-data/jma-earthquake/hypocenter.csv`,28.7MB
+[https://xs489works.xsrv.jp/pmtiles-data/jma-earthquake/hypocenter.csv](https://xs489works.xsrv.jp/pmtiles-data/jma-earthquake/hypocenter.csv),28.7MB
 #### 震度データ
-`https://xs489works.xsrv.jp/pmtiles-data/jma-earthquake/shindo.csv`,199.3MB
+[https://xs489works.xsrv.jp/pmtiles-data/jma-earthquake/shindo.csv](https://xs489works.xsrv.jp/pmtiles-data/jma-earthquake/shindo.csv),199.3MB
 
 ## 震源データを読みやすい形式へ変換（hypocenter_converter.py）
 - 震源データ（csvファイル）を読みやすい形式（csvファイル）に変換するプログラムです。
@@ -34,9 +34,9 @@
 - 震源データの緯度(度)、緯度(分)、経度(度)、経度(分)よりLatitude、Longitudeを作成しています。
 - 属性情報は必要最小限にしていますので適宜改変してください。
 ### 使用データ
-`https://xs489works.xsrv.jp/pmtiles-data/jma-earthquake/hypocenter.csv`,28.7MB
+[https://xs489works.xsrv.jp/pmtiles-data/jma-earthquake/hypocenter.csv](https://xs489works.xsrv.jp/pmtiles-data/jma-earthquake/hypocenter.csv),28.7MB
 ### 出力結果
-`https://xs489works.xsrv.jp/pmtiles-data/jma-earthquake/hypocenter_convert.csv`,19.6MB
+[https://xs489works.xsrv.jp/pmtiles-data/jma-earthquake/hypocenter_convert.csv](https://xs489works.xsrv.jp/pmtiles-data/jma-earthquake/hypocenter_convert.csv),19.6MB
 
 ## 震度データを読みやすい形式へ変換（shindo_converter.py）
 - 震度データ（csvファイル）を読みやすい形式（csvファイル）に変換するプログラムです。
@@ -44,42 +44,42 @@
 - 震度データの地震ID（年月）と発現日、発現時、発現分、発現秒よりDatTimeを作成し、付与しています。
 - 属性情報は必要最小限にしていますので適宜改変してください。
 ### 使用データ
-`https://xs489works.xsrv.jp/pmtiles-data/jma-earthquake/shindo.csv`,199.3MB  
-`https://github.com/shi-works/jma-earthquake-data-converter/blob/main/data/code_p.csv`
+[https://xs489works.xsrv.jp/pmtiles-data/jma-earthquake/shindo.csv](https://xs489works.xsrv.jp/pmtiles-data/jma-earthquake/shindo.csv),199.3MB  
+[https://github.com/shiwaku/jma-earthquake-data-converter/blob/main/data/code_p.csv](https://github.com/shiwaku/jma-earthquake-data-converter/blob/main/data/code_p.csv)
 ### 出力結果
-`https://xs489works.xsrv.jp/pmtiles-data/jma-earthquake/shindo_convert.csv`,180.2MB
+[https://xs489works.xsrv.jp/pmtiles-data/jma-earthquake/shindo_convert.csv](https://xs489works.xsrv.jp/pmtiles-data/jma-earthquake/shindo_convert.csv),180.2MB
 
 ## 震源データ及び震度データをGISデータ（FaltGeobuf形式及びGeoParquet形式）へ変換
 - 震源データ及び震度データのGISデータ（FaltGeobuf形式及びGeoParquet形式）への変換には[QGIS（バージョン3.28.4）](https://qgis.org/ja/site/)を使用します。
 ### 使用データ
 #### 震源データ
-`https://xs489works.xsrv.jp/pmtiles-data/jma-earthquake/hypocenter_convert.csv`,19.6MB
+[https://xs489works.xsrv.jp/pmtiles-data/jma-earthquake/hypocenter_convert.csv](https://xs489works.xsrv.jp/pmtiles-data/jma-earthquake/hypocenter_convert.csv),19.6MB
 #### 震度データ
-`https://xs489works.xsrv.jp/pmtiles-data/jma-earthquake/shindo_convert.csv`,180.2MB
+[https://xs489works.xsrv.jp/pmtiles-data/jma-earthquake/shindo_convert.csv](https://xs489works.xsrv.jp/pmtiles-data/jma-earthquake/shindo_convert.csv),180.2MB
 ### 出力結果（FaltGeobuf形式及びGeoParquet形式）
 #### 震源データ
 ##### FaltGeobuf形式
-`https://xs489works.xsrv.jp/pmtiles-data/jma-earthquake/hypocenter_convert.fgb`,51.6MB
+[https://xs489works.xsrv.jp/pmtiles-data/jma-earthquake/hypocenter_convert.fgb](https://xs489works.xsrv.jp/pmtiles-data/jma-earthquake/hypocenter_convert.fgb),51.6MB
 ##### GeoParquet形式
-`https://xs489works.xsrv.jp/pmtiles-data/jma-earthquake/hypocenter_convert.parquet`,8.5MB
+[https://xs489works.xsrv.jp/pmtiles-data/jma-earthquake/hypocenter_convert.parquet](https://xs489works.xsrv.jp/pmtiles-data/jma-earthquake/hypocenter_convert.parquet),8.5MB
 #### 震度データ
 ##### FaltGeobuf形式
-`https://xs489works.xsrv.jp/pmtiles-data/jma-earthquake/shindo_convert.fgb`,453.8MB
+[https://xs489works.xsrv.jp/pmtiles-data/jma-earthquake/shindo_convert.fgb](https://xs489works.xsrv.jp/pmtiles-data/jma-earthquake/shindo_convert.fgb),453.8MB
 ##### GeoParquet形式
-`https://xs489works.xsrv.jp/pmtiles-data/jma-earthquake/shindo_convert.parquet`,29.8MB
+[https://xs489works.xsrv.jp/pmtiles-data/jma-earthquake/shindo_convert.parquet](https://xs489works.xsrv.jp/pmtiles-data/jma-earthquake/shindo_convert.parquet),29.8MB
 
 ## FaltGeobuf形式からPMTiles形式への変換
 FaltGeobuf形式から[PMTiles形式](https://github.com/protomaps/PMTiles)への変換には[feltのtippecanoe](https://github.com/felt/tippecanoe)を使用します。
 ### 使用データ（FaltGeobuf形式）
 #### 震源データ
-`https://xs489works.xsrv.jp/pmtiles-data/jma-earthquake/hypocenter_convert.fgb`,51.6MB
+[https://xs489works.xsrv.jp/pmtiles-data/jma-earthquake/hypocenter_convert.fgb](https://xs489works.xsrv.jp/pmtiles-data/jma-earthquake/hypocenter_convert.fgb),51.6MB
 #### 震度データ
-`https://xs489works.xsrv.jp/pmtiles-data/jma-earthquake/shindo_convert.fgb`,453.8MB
+[https://xs489works.xsrv.jp/pmtiles-data/jma-earthquake/shindo_convert.fgb](https://xs489works.xsrv.jp/pmtiles-data/jma-earthquake/shindo_convert.fgb),453.8MB
 ### 出力結果（PMTiles形式）
 #### 震源データ
-`https://xs489works.xsrv.jp/pmtiles-data/jma-earthquake/hypocenter_convert.pmtiles`,177.4MB
+[https://xs489works.xsrv.jp/pmtiles-data/jma-earthquake/hypocenter_convert.pmtiles](https://xs489works.xsrv.jp/pmtiles-data/jma-earthquake/hypocenter_convert.pmtiles),177.4MB
 #### 震度データ
-`https://xs489works.xsrv.jp/pmtiles-data/jma-earthquake/shindo_convert.pmtiles`,541.7MB
+[https://xs489works.xsrv.jp/pmtiles-data/jma-earthquake/shindo_convert.pmtiles](https://xs489works.xsrv.jp/pmtiles-data/jma-earthquake/shindo_convert.pmtiles),541.7MB
 
 ### ベクトルタイル設計情報
 - 震源データ及び震度データそのものを可能な限り生かしたデータです。
@@ -116,7 +116,7 @@ https://www.data.jma.go.jp/svd/eqev/data/bulletin/data/shindo/format_j.pdf
 https://www.data.jma.go.jp/svd/eqev/data/bulletin/data/hypo/relocate.html
 
 ## ライセンス
-本プログラムは[MITライセンス](https://github.com/shi-works/jma-earthquake-data-converter/blob/main/LICENSE)で提供されます。  
+本プログラムは[MITライセンス](https://github.com/shiwaku/jma-earthquake-data-converter/blob/main/LICENSE)で提供されます。  
 本データセットはCC-BY-4.0で提供されます。使用の際には本レポジトリへのリンクを提示してください。
 
 また、本データセットは、気象庁が公開している、地震月報(カタログ編)の震度データ及び震度観測点一覧を加工して作成したものです。本データセットの使用・加工にあたっては、[気象庁の利用規約](https://www.jma.go.jp/jma/kishou/info/coment.html)を必ずご確認ください。
