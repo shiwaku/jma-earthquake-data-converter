@@ -1,6 +1,6 @@
 # jma-earthquake-data-converter
 ## プログラムについて
-- 本プログラムは、気象庁が公開している、[地震月報(カタログ編)の震度データ（1919～2020年）及び震度観測点一覧](https://www.data.jma.go.jp/eqev/data/bulletin/shindo.html)を読みやすい形式（GISデータ）に変換するプログラムです。
+- 本プログラムは、気象庁が公開している、[地震月報(カタログ編)の震度データ（1919～2021年）及び震度観測点一覧](https://www.data.jma.go.jp/eqev/data/bulletin/shindo.html)を読みやすい形式（GISデータ）に変換するプログラムです。
 - オープンソースソフトウェアで構築
 
 ## データの入手
