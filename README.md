@@ -76,7 +76,7 @@ tippecanoe -zg -B7 -rg -o shindo_convert.pmtiles -r1 -d8 -pf -pk shindo_convert.
 #### 震源データ
 [https://xs489works.xsrv.jp/pmtiles-data/jma-earthquake/hypocenter_convert.pmtiles](https://xs489works.xsrv.jp/pmtiles-data/jma-earthquake/hypocenter_convert.pmtiles),62MB
 #### 震度データ
-[https://xs489works.xsrv.jp/pmtiles-data/jma-earthquake/shindo_convert.pmtiles](https://xs489works.xsrv.jp/pmtiles-data/jma-earthquake/shindo_convert.pmtiles),541.7MB
+[https://xs489works.xsrv.jp/pmtiles-data/jma-earthquake/shindo_convert.pmtiles](https://xs489works.xsrv.jp/pmtiles-data/jma-earthquake/shindo_convert.pmtiles),150MB
 
 ### ベクトルタイル設計情報
 - 震源データ及び震度データそのものを可能な限り生かしたデータです。
