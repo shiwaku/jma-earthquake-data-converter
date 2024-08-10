@@ -29,7 +29,8 @@
         .map-overlay {
             font: 12px/20px 'Helvetica Neue', Arial, Helvetica, sans-serif;
             position: absolute;
-            width: auto;
+            /*width: auto;*/
+            width: 250px;
             top: 0;
             left: 0;
             padding: 10px;
@@ -165,11 +166,19 @@
             background: rgba(255, 255, 255, 1);
             box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
             border-radius: 5px;
-            width: fit-content;
+            /*width: fit-content;*/
+            width: 250px;
             position: absolute;
             top: 10px;
             left: 10px;
             z-index: 10;
+        }
+
+        #earthquake select {
+            width: 100%;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
     </style>
 
