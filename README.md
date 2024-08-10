@@ -62,9 +62,9 @@ ogr2ogr -f "Parquet" shindo_convert.parquet shindo_convert.csv -oo X_POSSIBLE_NA
 [https://xs489works.xsrv.jp/pmtiles-data/jma-earthquake/shindo_convert.csv](https://xs489works.xsrv.jp/pmtiles-data/jma-earthquake/shindo_convert.csv),191MB
 ### 出力結果（GeoParquet形式）
 #### 震源データ
-[https://xs489works.xsrv.jp/pmtiles-data/jma-earthquake/hypocenter_convert.parquet](https://xs489works.xsrv.jp/pmtiles-data/jma-earthquake/hypocenter_convert.parquet),8.5MB
+[https://xs489works.xsrv.jp/pmtiles-data/jma-earthquake/hypocenter_convert.parquet](https://xs489works.xsrv.jp/pmtiles-data/jma-earthquake/hypocenter_convert.parquet),11MB
 #### 震度データ
-[https://xs489works.xsrv.jp/pmtiles-data/jma-earthquake/shindo_convert.parquet](https://xs489works.xsrv.jp/pmtiles-data/jma-earthquake/shindo_convert.parquet),29.8MB
+[https://xs489works.xsrv.jp/pmtiles-data/jma-earthquake/shindo_convert.parquet](https://xs489works.xsrv.jp/pmtiles-data/jma-earthquake/shindo_convert.parquet),40MB
 
 ## 震源データ及び震度データをPMTiles形式へ変換
 震源データ及び震度データの[PMTiles形式](https://github.com/protomaps/PMTiles)への変換には[feltのtippecanoe](https://github.com/felt/tippecanoe)を使用しています。
