@@ -77,18 +77,7 @@ tippecanoe -zg -B7 -rg -o shindo_convert.pmtiles -r1 -d8 -pf -pk shindo_convert.
 [https://xs489works.xsrv.jp/pmtiles-data/jma-earthquake/hypocenter_convert.pmtiles](https://xs489works.xsrv.jp/pmtiles-data/jma-earthquake/hypocenter_convert.pmtiles),62MB
 #### 震度データ
 [https://xs489works.xsrv.jp/pmtiles-data/jma-earthquake/shindo_convert.pmtiles](https://xs489works.xsrv.jp/pmtiles-data/jma-earthquake/shindo_convert.pmtiles),150MB
-
-### ベクトルタイル設計情報
-- 震源データ及び震度データそのものを可能な限り生かしたデータです。
-- tippecanoeによるデータの間引き（自動）は行っていません。
-
-### ズームレベル範囲
-- 0-14
-
-### 属性
-- 震源データ及び震度データの属性はそのまま生かしています。
-
-### PMTiles Viewer
+#### PMTiles Viewer
 - PMTilesはPMTiles Viewerで閲覧することができます。
 - https://protomaps.github.io/PMTiles/
 
