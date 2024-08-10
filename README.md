@@ -69,6 +69,10 @@ ogr2ogr -f "Parquet" shindo_convert.parquet shindo_convert.csv -oo X_POSSIBLE_NA
 
 ## 震源データ及び震度データをPMTiles形式へ変換
 [PMTiles形式](https://github.com/protomaps/PMTiles)への変換には[feltのtippecanoe](https://github.com/felt/tippecanoe)を使用しています。
+```
+tippecanoe -o hypocenter_convert.pmtiles -r1 -pf -pk -P hypocenter_convert.geojson
+tippecanoe -o shindo_convert.pmtiles -r1 -d1 -pf -pk -P shindo_convert.geojson
+```
 ### 出力結果（PMTiles形式）
 #### 震源データ
 [https://xs489works.xsrv.jp/pmtiles-data/jma-earthquake/hypocenter_convert.pmtiles](https://xs489works.xsrv.jp/pmtiles-data/jma-earthquake/hypocenter_convert.pmtiles),177.4MB
