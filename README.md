@@ -50,7 +50,7 @@
 [https://xs489works.xsrv.jp/pmtiles-data/jma-earthquake/shindo_convert.csv](https://xs489works.xsrv.jp/pmtiles-data/jma-earthquake/shindo_convert.csv),191MB
 
 ## 震源データ及び震度データをGeoParquet形式へ変換
-- 震源データ及び震度データのGISデータ（GeoParquet形式）への変換には[GDAL/OGR(OSGeo4W)](https://trac.osgeo.org/osgeo4w/)を使用しています。
+- 震源データ及び震度データのGeoParquet形式への変換には[GDAL/OGR(OSGeo4W)](https://trac.osgeo.org/osgeo4w/)を使用しています。
 ```
 # GeoParquetに変換
 ogr2ogr -f "Parquet" hypocenter_convert.parquet hypocenter_convert.csv -oo X_POSSIBLE_NAMES=Longitude -oo Y_POSSIBLE_NAMES=Latitude -s_srs EPSG:4326 -t_srs EPSG:4326
