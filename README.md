@@ -52,7 +52,6 @@
 ## 震源データ及び震度データをGeoParquet形式へ変換
 - 震源データ及び震度データのGeoParquet形式への変換には[GDAL/OGR(OSGeo4W)](https://trac.osgeo.org/osgeo4w/)を使用しています。
 ```
-# GeoParquetに変換
 ogr2ogr -f "Parquet" hypocenter_convert.parquet hypocenter_convert.csv -oo X_POSSIBLE_NAMES=Longitude -oo Y_POSSIBLE_NAMES=Latitude -s_srs EPSG:4326 -t_srs EPSG:4326
 ogr2ogr -f "Parquet" shindo_convert.parquet shindo_convert.csv -oo X_POSSIBLE_NAMES=観測点経度 -oo Y_POSSIBLE_NAMES=観測点緯度 -s_srs EPSG:4326 -t_srs EPSG:4326
 ```
