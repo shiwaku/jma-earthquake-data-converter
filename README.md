@@ -74,7 +74,7 @@ tippecanoe -o shindo_convert.pmtiles -r1 -d1 -pf -pk shindo_convert.geojson
 ```
 ### 出力結果（PMTiles形式）
 #### 震源データ
-[https://xs489works.xsrv.jp/pmtiles-data/jma-earthquake/hypocenter_convert.pmtiles](https://xs489works.xsrv.jp/pmtiles-data/jma-earthquake/hypocenter_convert.pmtiles),177.4MB
+[https://xs489works.xsrv.jp/pmtiles-data/jma-earthquake/hypocenter_convert.pmtiles](https://xs489works.xsrv.jp/pmtiles-data/jma-earthquake/hypocenter_convert.pmtiles),62MB
 #### 震度データ
 [https://xs489works.xsrv.jp/pmtiles-data/jma-earthquake/shindo_convert.pmtiles](https://xs489works.xsrv.jp/pmtiles-data/jma-earthquake/shindo_convert.pmtiles),541.7MB
 
