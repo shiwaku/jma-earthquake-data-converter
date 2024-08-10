@@ -311,8 +311,8 @@
             // style: './dark.json',
             // style: 'https://tile2.openstreetmap.jp/styles/osm-bright/style.json',
             style: 'https://tile.openstreetmap.jp/styles/maptiler-basic-ja/style.json',
-            center: [135.196, 35.177],
-            zoom: 6.02,
+            center: [139.181, 35.386],
+            zoom: 8.26,
             pitch: 0,
             hash: true,
             attributionControl: false
@@ -378,7 +378,7 @@
                 'id': 'shindo-points-1',
                 'type': 'circle',
                 'source': 'shindo',
-                "source-layer": "shindo_convertfgb",
+                "source-layer": "shindo_convert",
                 'paint': {
                     'circle-color': [
                         'match',
@@ -414,7 +414,7 @@
                 'id': 'shindo-labels-1',
                 'type': 'symbol',
                 'source': 'shindo',
-                "source-layer": "shindo_convertfgb",
+                "source-layer": "shindo_convert",
                 'layout': {
                     'text-field': ['get', '震度'],
                     'text-font': ['DIN Offc Pro Bold', 'Arial Unicode MS Black'],
@@ -460,7 +460,7 @@
                 'id': 'hypo-points-1',
                 'type': 'symbol',
                 'source': 'hypo',
-                "source-layer": "hypocenter_convertfgb",
+                "source-layer": "hypocenter_convert",
                 'layout': {
                     'text-field': '×',
                     'text-font': ['DIN Offc Pro Bold'],
@@ -483,7 +483,7 @@
                 // キー：id、値：緯度、経度、ズームレベル
                 '19230901115831': [35.418, 139.263, 8.39],
                 '19441207133540': [34.24, 135.953, 7.97],
-                '19461221041904': [35.177, 135.196, 6.02],
+                '19461221041904': [33.809, 135.77, 7.78],
                 '19830526115957': [39.934, 140.283, 7.65],
                 '19930712221711': [42.666, 140.451, 7.53],
                 '19950117054651': [34.553, 134.998, 7.85],
@@ -528,7 +528,7 @@
                 'id': 'shindo-points-1',
                 'type': 'circle',
                 'source': 'shindo',
-                "source-layer": "shindo_convertfgb",
+                "source-layer": "shindo_convert",
                 'paint': {
                     'circle-color': [
                         'match',
@@ -564,7 +564,7 @@
                 'id': 'shindo-labels-1',
                 'type': 'symbol',
                 'source': 'shindo',
-                "source-layer": "shindo_convertfgb",
+                "source-layer": "shindo_convert",
                 'layout': {
                     'text-field': ['get', '震度'],
                     'text-font': ['DIN Offc Pro Bold', 'Arial Unicode MS Black'],
@@ -603,7 +603,7 @@
                 'id': 'hypo-points-1',
                 'type': 'symbol',
                 'source': 'hypo',
-                "source-layer": "hypocenter_convertfgb",
+                "source-layer": "hypocenter_convert",
                 'layout': {
                     'text-field': '×', // シンボルマークに表示される文字
                     'text-font': ['DIN Offc Pro Bold'], // 使用するフォント
