@@ -1,6 +1,6 @@
-import { didLayer } from './did'
-import { hypocenterLayer } from './hypocenter'
-import { shindoLayer } from './shindo'
+// import { didLayer } from './did'
+// import { hypocenterLayer } from './hypocenter'
+// import { shindoLayer } from './shindo'
 import { unfeltLayer } from './unfelt'
 import type { LayerModule } from './types'
 
@@ -14,7 +14,10 @@ import type { LayerModule } from './types'
  *
  * レイヤーを増やすときは、layers/ にモジュールを1枚書いてこの配列に足すだけでよい。
  */
-export const LAYERS: LayerModule[] = [didLayer, unfeltLayer, hypocenterLayer, shindoLayer]
+// いまは震源（無感含む）だけを出している。戻すときは import とこの配列の
+// 両方のコメントを解除する。配列順が z順とパネルの並び順を兼ねるため、
+// 面である人口集中地区は先頭、点の震度は末尾という順序を維持すること。
+export const LAYERS: LayerModule[] = [/* didLayer, */ unfeltLayer /*, hypocenterLayer, shindoLayer */]
 
 /**
  * あるレイヤーを有効にしたとき、一緒に有効にするレイヤー。

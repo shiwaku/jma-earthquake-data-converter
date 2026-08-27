@@ -178,6 +178,9 @@ export function createEventSearch(store: AppStore): void {
     const layers = store.get().layers
     const usable = DEPENDENTS.some((key) => layers[key]?.visible)
     bar.hidden = !usable
+    // 下端のバーが無いときは、地図コントロールと深さの凡例を下げる。
+    // 位置決めは --timebar-h 1つに集約してあるので、ここを0にすれば全部追随する。
+    document.body.classList.toggle('no-eventbar', !usable)
     if (!usable) close()
   }
 
