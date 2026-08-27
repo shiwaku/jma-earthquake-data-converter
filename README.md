@@ -2,7 +2,7 @@
 
 気象庁 [地震月報(カタログ編)](https://www.data.jma.go.jp/eqev/data/bulletin/shindo.html) の震源データ（1919〜2023年）と震度データ（1919〜2022年）を、そのままでは扱えない固定長テキストから GIS データ（CSV / GeoParquet / PMTiles / MLT）へ変換し、地図で見られるようにします。震源は深さ方向に配置して立体表示できます。
 
-[![Demo](https://img.shields.io/badge/demo-震源・震度マップ-2a78d6)](https://shiwaku.github.io/jma-earthquake-data-converter/)
+[![Demo](https://img.shields.io/badge/demo-震源マップ-2a78d6)](https://shiwaku.github.io/jma-earthquake-data-converter/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 [![Data: CC BY 4.0](https://img.shields.io/badge/data-CC%20BY%204.0-green)](#ライセンス)
 
