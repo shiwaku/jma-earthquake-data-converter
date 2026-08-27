@@ -23,16 +23,23 @@ function filterFor(eventId: string | null): FilterSpecification {
 export const hypocenterLayer: LayerModule = {
   def: {
     key: KEY,
-    name: '震源',
+    name: '震源（有感のみ）',
     // 震源はMLTで配信する。3Dの点群も同じソースを使うので取得は1系統で済む。
     format: 'mlt',
     url: mltTileUrl('jma-earthquake'),
     minzoom: 0,
     maxzoom: 8,
     sourceLayer: 'hypocenter',
-    defaultVisible: true,
+    defaultVisible: false,
     defaultOpacity: 1,
-    desc: '気象庁が決定した震源の位置。震源レコードが複数ある地震では代表値（採用値）のみを収録している。震源が決定できていない地震は座標を持たない。',
+    desc:
+      '気象庁が決定した地震の震源です。地震月報(カタログ編)の震度データに含まれる1919年〜2022年の214,763件を収録しています。選択した地震の震源を×印で表示します。'
+      + '\n\n'
+      + 'ここでいう有感地震とは、いずれかの観測点で震度が観測された地震のことです。震度が観測されなかった地震は「震源（無感含む）」レイヤーに収録しています。'
+      + '\n\n'
+      + '1つの地震に複数の震源レコードがある場合、1番上のレコード（代表値・採用値）のみを採用しています。震源が決定できなかった地震は座標を持たないため表示されません（124件）。'
+      + '\n\n'
+      + '深さの決定方法は年代によって異なります。深さを固定して計算した時期があり、1926〜1960年と1967〜1982年は10km刻み、1961〜1966年は20km刻み、1983年以降は1km刻みです。ただし1982年以前の地震は適宜再調査され、深さを固定しない計算または1km刻みの震源に置き換えられています。',
     attribution:
       '<a href="https://www.data.jma.go.jp/eqev/data/bulletin/shindo.html" target="_blank" rel="noopener">気象庁 震源データ</a>',
   },

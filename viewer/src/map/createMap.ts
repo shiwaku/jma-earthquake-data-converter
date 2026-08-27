@@ -51,8 +51,12 @@ export function createMap(container: string, state: AppState): MapLibreMap {
   const map = new MapLibreMap({
     container,
     style: getBasemapStyle(state.basemap, state.theme),
-    center: [138.5, 37.5],
-    zoom: 4.5,
+    center: [134.8, 32.365],
+    // 傾けた分だけ遠くまで写るため、真上から見るときより1段寄せる。
+    zoom: 5.25,
+    // 初期状態から傾けておく。このビューワの主役は震源の深さ方向の分布で、
+    // 真上からでは沈み込み帯の形が見えないため。
+    pitch: 61,
     // 既定の上限は60。震源の深さを断面のように見るには浅すぎるので上げる。
     // maplibre は 60 超を experimental としているが、地形を使っていないので影響は小さい。
     maxPitch: 85,

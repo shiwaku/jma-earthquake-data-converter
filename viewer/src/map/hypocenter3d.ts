@@ -139,7 +139,7 @@ export function createHypocenter3d(map: MapLibreMap, store: AppStore): void {
           getPosition: (d) => d.position,
           getFillColor: (d) => d.color,
           // 参考実装と同じ考え方。点を小さく薄くして、重なりの濃淡で密度を見せる。
-          // 大きく濃くすると20万点が一枚の塊になって深さが読めない。
+          // 大きく濃くすると点が一枚の塊になって深さが読めない。
           getRadius: 500,
           radiusMinPixels: 1,
           radiusMaxPixels: 4,

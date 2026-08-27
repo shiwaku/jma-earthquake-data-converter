@@ -13,7 +13,7 @@ import type { AppStore } from '../state'
  * ないため、レイヤーごとに opacity 系のプロパティを掛け直す。元の値は覚えておいて
  * 抜けるときに戻す。
  */
-const DIM = 0.35
+const DIM = 1
 
 /** 種別ごとの opacity プロパティ。 */
 const OPACITY_PROP: Record<string, string> = {
@@ -27,7 +27,7 @@ const OPACITY_PROP: Record<string, string> = {
 }
 
 /** データレイヤーは対象外。背景（ベースマップ）だけを薄くする。 */
-const DATA_SOURCES = new Set(['did', 'shindo', 'hypocenter'])
+const DATA_SOURCES = new Set(['did', 'shindo', 'hypocenter', 'unfelt'])
 
 export function createBasemapDim(map: MapLibreMap, store: AppStore): void {
   /** レイヤーID+プロパティ → 元の値。 */
@@ -74,15 +74,19 @@ export function createBasemapDim(map: MapLibreMap, store: AppStore): void {
   }
 
   store.subscribe((s, prev) => {
-    if (s.depth3d !== prev.depth3d) {
-      if (s.depth3d) dim()
+    if (s.basemapDim !== prev.basemapDim) {
+      if (s.basemapDim) dim()
       else restore()
       return
     }
     // スタイルを作り直したら掛け直す（覚えていた値は無効になる）
-    if (s.depth3d && (s.theme !== prev.theme || s.basemap !== prev.basemap)) {
+    if (s.basemapDim && (s.theme !== prev.theme || s.basemap !== prev.basemap)) {
       saved = []
       map.once('idle', dim)
     }
   })
+
+  // 初期カメラを傾けてあるため、起動時から減光が要る。
+  // 背景スタイルのレイヤーが揃ってからでないと掛けられないので idle を待つ。
+  if (store.get().basemapDim) map.once('idle', dim)
 }

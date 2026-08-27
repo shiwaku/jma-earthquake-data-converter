@@ -15,7 +15,7 @@ import { createAppStore } from './state'
 import { createBasemapSwitch } from './ui/basemapSwitch'
 import { createDatasetInfo } from './ui/datasetInfo'
 import { createEventSearch } from './ui/eventSearch'
-import { createDepth3dToggle } from './ui/depth3dToggle'
+import { createDepth3dAuto } from './ui/depth3dAuto'
 import { createLayerPanel } from './ui/layerPanel'
 import { createPanel } from './ui/panel'
 import { createThemeToggle } from './ui/themeToggle'
@@ -39,7 +39,7 @@ createThemeToggle(store)
 createPanel()
 createEventSearch(store)
 createLayerPanel(store)
-createDepth3dToggle(map, store)
+createDepth3dAuto(map, store)
 createDatasetInfo()
 
 const buildEl = document.getElementById('build-ver')

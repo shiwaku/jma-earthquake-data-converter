@@ -17,12 +17,19 @@ function filterFor(eventId: string | null): FilterSpecification {
 export const shindoLayer: LayerModule = {
   def: {
     key: KEY,
-    name: '震度',
+    name: '各観測点の震度',
     url: pmtilesUrl('jma-earthquake/shindo_convert.pmtiles'),
     sourceLayer: 'shindo_convert',
-    defaultVisible: true,
+    defaultVisible: false,
     defaultOpacity: 1,
-    desc: '各震度観測点で観測された震度。1996年10月の震度階級改定より前は震度5・6に強弱の区別がない。観測点の名称と座標は震度観測点一覧から観測点番号で結合している。',
+    desc:
+      '各震度観測点で観測された震度です。気象庁が地震月報(カタログ編)として公開している震度データから、1919年〜2022年の1,942,347件を収録しています。選択した地震で震度が観測された観測点だけを表示します。'
+      + '\n\n'
+      + '震度階級は1996年10月に改定されました。それ以前のデータには震度5・6に強弱の区別がないため、凡例では「（旧階級）」と表記して現在の震度5弱・5強・6弱・6強と区別しています。同じ色で塗っていても意味が異なる点にご注意ください。'
+      + '\n\n'
+      + '震度9は「有感であるが階級不明」を意味します。計測震度の「//」は欠測です。発現時刻が不明な記録では日時が「//」と表示されます（23,840件）。'
+      + '\n\n'
+      + '観測点の名称と座標は、気象庁の震度観測点一覧（7,239地点）から観測点番号で結合しています。なお1995年兵庫県南部地震の震度7は面的な判定であり点の観測ではないため、地図には表示していません。',
     attribution:
       '<a href="https://www.data.jma.go.jp/eqev/data/bulletin/shindo.html" target="_blank" rel="noopener">気象庁 震度データ</a>',
   },
