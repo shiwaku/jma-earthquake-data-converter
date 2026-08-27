@@ -584,6 +584,63 @@ body {
   font-weight: 600;
 }
 
+/* ---- 震源の深さ（3D表示） ---- */
+.depth3d-note {
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.45;
+  color: var(--ink-3);
+}
+
+/* 凡例は地図上に浮かせる。パネルを畳んでも読めるようにするため。 */
+.depth-legend {
+  position: absolute;
+  left: calc(300px + 16px);
+  bottom: calc(var(--timebar-h) + 16px);
+  z-index: 2;
+  width: 220px;
+  padding: 8px 10px 6px;
+  background: var(--surface-solid);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow);
+  pointer-events: none;
+}
+
+.depth-legend[hidden] {
+  display: none;
+}
+
+.dl-bar {
+  height: 10px;
+  border-radius: 5px;
+  border: 1px solid var(--line-2);
+}
+
+/* 目盛りは非線形なので、位置を left で指定して置く。 */
+.dl-ticks {
+  position: relative;
+  height: 14px;
+  margin-top: 3px;
+  font-size: 10px;
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+
+.dl-ticks span {
+  position: absolute;
+  transform: translateX(-50%);
+  white-space: nowrap;
+}
+
+.dl-ticks span:first-child {
+  transform: none;
+}
+
+.dl-ticks span:last-child {
+  transform: translateX(-100%);
+}
+
 /* ---- レイヤートグル ---- */
 .toggles {
   display: grid;
@@ -1038,6 +1095,12 @@ body {
   .event-pop {
     left: 0;
     right: 0;
+    width: auto;
+  }
+
+  .depth-legend {
+    left: 12px;
+    right: 12px;
     width: auto;
   }
 

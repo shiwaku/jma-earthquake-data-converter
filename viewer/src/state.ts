@@ -22,16 +22,19 @@ export interface AppState {
   basemap: Basemap
   layers: Record<string, LayerState>
   selection: Selection | null
+  /** 震源を深さで立体表示するモード。 */
+  depth3d: boolean
 }
 
 export type AppStore = Store<AppState>
 
 const THEME_KEY = 'jma-earthquake-viewer:theme'
 
+/** 既定はダーク。震源の点や震度の色が背景に埋もれず、深さの3D表示も見やすい。 */
 function savedTheme(): Theme {
   const saved = localStorage.getItem(THEME_KEY)
   if (saved === 'light' || saved === 'dark') return saved
-  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+  return 'dark'
 }
 
 function defaultLayers(): Record<string, LayerState> {
@@ -49,6 +52,7 @@ export function createAppStore(initial: Partial<AppState> = {}): AppStore {
     basemap: 'pale',
     layers: defaultLayers(),
     selection: null,
+    depth3d: false,
     ...initial,
   })
 
