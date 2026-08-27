@@ -38,6 +38,8 @@ export interface RenderContext {
 
 export interface PaintContext extends RenderContext {
   opacity: number
+  /** 深さの立体表示中か。地物を地下へ下げるかの判断に使う。 */
+  depth3d: boolean
 }
 
 export interface PaintUpdate {
@@ -76,6 +78,8 @@ export interface LayerModule {
   pickLayerId: string
   specs(ctx: PaintContext): LayerSpecification[]
   paintUpdates(ctx: PaintContext): PaintUpdate[]
+  /** layout プロパティの更新（任意）。 */
+  layoutUpdates?(ctx: PaintContext): PaintUpdate[]
   /**
    * 地震の切替に伴うフィルタ更新。
    * 参考にした信号ビューワは属性を24時間分持たせてpaint式だけで切り替えているが、

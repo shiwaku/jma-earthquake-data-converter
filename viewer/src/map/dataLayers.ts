@@ -36,7 +36,12 @@ function sourceSpec(mod: LayerModule): SourceSpecification {
 export function createDataLayers(map: MapLibreMap, store: AppStore): void {
   const ctxFor = (mod: LayerModule): PaintContext => {
     const s = store.get()
-    return { eventId: s.eventId, theme: s.theme, opacity: s.layers[mod.def.key].opacity }
+    return {
+      eventId: s.eventId,
+      theme: s.theme,
+      opacity: s.layers[mod.def.key].opacity,
+      depth3d: s.depth3d,
+    }
   }
 
   // canonical z順: LAYERS 配列の後ろほど地図で最前面。
@@ -80,9 +85,13 @@ export function createDataLayers(map: MapLibreMap, store: AppStore): void {
     const state = store.get()
     for (const mod of LAYERS) {
       if (!state.layers[mod.def.key].visible) continue
-      for (const u of mod.paintUpdates(ctxFor(mod))) {
+      const ctx = ctxFor(mod)
+      for (const u of mod.paintUpdates(ctx)) {
         // paintのプロパティ名と値はレイヤーモジュールが汎用の型で持つため、ここで型を合わせる
         if (map.getLayer(u.id)) map.setPaintProperty(u.id, u.prop as never, u.value as never)
+      }
+      for (const u of mod.layoutUpdates?.(ctx) ?? []) {
+        if (map.getLayer(u.id)) map.setLayoutProperty(u.id, u.prop as never, u.value as never)
       }
     }
   }
@@ -120,6 +129,8 @@ export function createDataLayers(map: MapLibreMap, store: AppStore): void {
       return
     }
     if (s.eventId !== prev.eventId) applyFilter()
+    // 立体表示の切替で震源の高さが変わる
+    if (s.depth3d !== prev.depth3d) applyPaint()
   })
 
   map.on('load', sync)
