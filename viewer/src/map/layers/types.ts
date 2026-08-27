@@ -7,8 +7,17 @@ export interface LayerDef {
   key: string
   /** 表示名（日本語） */
   name: string
-  /** PMTiles のURL。配信元は環境で変わるため pmtilesUrl() で組み立てる。 */
+  /**
+   * タイルの配信元。
+   *   pmtiles … 単一アーカイブ。url は完全なURL（pmtilesUrl() で組み立てる）
+   *   mlt     … XYZのMLTタイル。url は {z}/{x}/{y} を含むテンプレート
+   * 既定は pmtiles。
+   */
+  format?: 'pmtiles' | 'mlt'
   url: string
+  /** mlt のときのズーム範囲。 */
+  minzoom?: number
+  maxzoom?: number
   /** ベクトルタイル内のレイヤー名 */
   sourceLayer: string
   /** 初期表示 ON/OFF */

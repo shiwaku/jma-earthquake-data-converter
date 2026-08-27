@@ -1,6 +1,6 @@
 import type { FilterSpecification, LayerSpecification } from 'maplibre-gl'
 import { GLYPH_FONT } from '../basemap'
-import { pmtilesUrl } from '../../lib/pmtiles'
+import { mltTileUrl } from '../../lib/pmtiles'
 import { coordFooter, esc, prop, row } from '../../lib/format'
 import type { LayerModule, PaintContext, RenderContext } from './types'
 
@@ -18,8 +18,12 @@ export const hypocenterLayer: LayerModule = {
   def: {
     key: KEY,
     name: '震源',
-    url: pmtilesUrl('jma-earthquake/hypocenter_convert.pmtiles'),
-    sourceLayer: 'hypocenter_convert',
+    // 震源はMLTで配信する。3Dの点群も同じソースを使うので取得は1系統で済む。
+    format: 'mlt',
+    url: mltTileUrl('jma-earthquake'),
+    minzoom: 0,
+    maxzoom: 8,
+    sourceLayer: 'hypocenter',
     defaultVisible: true,
     defaultOpacity: 1,
     desc: '気象庁が決定した震源の位置。震源レコードが複数ある地震では代表値（採用値）のみを収録している。震源が決定できていない地震は座標を持たない。',
@@ -72,11 +76,12 @@ export const hypocenterLayer: LayerModule = {
   },
 
   popupHtml(p, lng, lat) {
-    const magnitude = prop(p, 'マグニチュード1')
+    // MLT側の属性名は変換時に短くしてある
+    const magnitude = prop(p, 'マグニチュード') || prop(p, 'マグニチュード1')
     const rows =
       row('発生時刻', prop(p, 'DateTime'), true) +
       row('マグニチュード', magnitude) +
-      row('深さ(km)', prop(p, '深さ(km)')) +
+      row('深さ(km)', prop(p, '深さ') || prop(p, '深さ(km)')) +
       row('最大震度', prop(p, '最大震度')) +
       row('観測点数', prop(p, '観測点数')) +
       row('地震ID', prop(p, '地震ID'))

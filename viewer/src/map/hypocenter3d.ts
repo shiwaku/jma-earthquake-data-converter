@@ -2,7 +2,6 @@ import { MapboxOverlay } from '@deck.gl/mapbox'
 import { ScatterplotLayer } from '@deck.gl/layers'
 import type { Map as MapLibreMap } from 'maplibre-gl'
 
-import { PMTILES_BASE } from '../lib/pmtiles'
 import type { AppStore } from '../state'
 
 /**
@@ -16,20 +15,13 @@ import type { AppStore } from '../state'
  * そのため深さは属性で運び、[lng, lat, -深さ×1000] の組み立ては deck.gl 側で行う。
  * これは参考実装（gsi-2026-mlt-demo）が建物の標高で採っている構成と同じ。
  *
- * MapLibre は「ソースを参照するレイヤが無いとタイルを取得しない」。描画は deck.gl が
- * 担うが、querySourceFeatures でデータを得るために不可視のローダーレイヤを1枚置く。
+ * データは震源レイヤー（layers/hypocenter.ts）のMLTソースをそのまま使う。取得は1系統で、
+ * 2Dの×印と3Dの点群が同じタイルを共有する。
+ * 震源レイヤーを非表示にするとソースごと外れるため、3Dの点群も消える。
  */
 
-const SOURCE_ID = 'hypocenter-mlt'
-const LOADER_LAYER_ID = 'hypocenter-mlt-load'
+const SOURCE_ID = 'hypocenter'
 const SOURCE_LAYER = 'hypocenter'
-
-/** MLTタイルの配置。PMTilesと同じルートの隣に置いてある。 */
-const MLT_BASE = `${PMTILES_BASE.replace(/\/pmtiles$/, '/mlt')}/jma-earthquake`
-
-/** z0-2は全点が1枚（約10MB）に入ってしまうため、5から上だけを使う。 */
-const MINZOOM = 5
-const MAXZOOM = 8
 
 /**
  * 深さ→色の対応。参考実装（japan-eq-locator）と同じ Spectral 系の並びだが、
@@ -88,37 +80,6 @@ export const DEPTH_TICKS = [0, 70, 150, 400, 700]
 
 export function depthTickPosition(km: number): number {
   return (km / DEPTH_STOPS[DEPTH_STOPS.length - 1][0]) * 100
-}
-
-/**
- * MapLibre に MLT ソースを足す。
- * encoding は TileJSON 経由でしか worker に伝わらない。インラインの tiles:[...] だと
- * MVT として誤パースされて失敗するため、TileJSON を Blob URL で組み立てて渡す。
- */
-function addMltSource(map: MapLibreMap): void {
-  if (map.getSource(SOURCE_ID)) return
-  const tilejson = {
-    tilejson: '2.2.0',
-    tiles: [`${MLT_BASE}/{z}/{x}/{y}.mlt`],
-    minzoom: MINZOOM,
-    maxzoom: MAXZOOM,
-    vector_layers: [{ id: SOURCE_LAYER, fields: {} }],
-  }
-  const url = URL.createObjectURL(new Blob([JSON.stringify(tilejson)], { type: 'application/json' }))
-  map.addSource(SOURCE_ID, { type: 'vector', url, encoding: 'mlt' } as never)
-  // タイルのロードを維持するためだけの不可視レイヤー。
-  map.addLayer({
-    id: LOADER_LAYER_ID,
-    type: 'circle',
-    source: SOURCE_ID,
-    'source-layer': SOURCE_LAYER,
-    paint: { 'circle-opacity': 0, 'circle-radius': 1 },
-  })
-}
-
-function removeMltSource(map: MapLibreMap): void {
-  if (map.getLayer(LOADER_LAYER_ID)) map.removeLayer(LOADER_LAYER_ID)
-  if (map.getSource(SOURCE_ID)) map.removeSource(SOURCE_ID)
 }
 
 export function createHypocenter3d(map: MapLibreMap, store: AppStore): void {
@@ -191,12 +152,10 @@ export function createHypocenter3d(map: MapLibreMap, store: AppStore): void {
       map.on('sourcedata', onSourceData)
       map.on('moveend', schedule)
     }
-    addMltSource(map)
     schedule()
   }
 
   function disable(): void {
-    removeMltSource(map)
     cache.clear()
     overlay?.setProps({ layers: [] })
   }
@@ -212,12 +171,10 @@ export function createHypocenter3d(map: MapLibreMap, store: AppStore): void {
       else disable()
       return
     }
-    // 背景やテーマを切り替えるとスタイルごと作り直されるため、載せ直す。
-    if (s.depth3d && (s.theme !== prev.theme || s.basemap !== prev.basemap)) {
-      map.once('idle', () => {
-        addMltSource(map)
-        schedule()
-      })
+    // 背景やテーマの切替でスタイルごと作り直される。震源レイヤーのON/OFFでも
+    // ソースが出入りするため、いずれも取り直す。
+    if (s.depth3d && (s.theme !== prev.theme || s.basemap !== prev.basemap || s.layers !== prev.layers)) {
+      map.once('idle', schedule)
     }
   })
 
