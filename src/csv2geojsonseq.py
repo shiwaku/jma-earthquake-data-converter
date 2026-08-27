@@ -10,6 +10,10 @@ tippecanoeは -P で行区切りGeoJSONを並列読み込みできる。
 地震IDは14桁の数字だが、ビューワが ['==', ['get', '地震ID'], '19230901115831']
 のように文字列で比較するため、数値化してはいけない。
 
+--float は --number と同じく数値化するが、整数値にも微小なオフセットを足して
+必ず小数にする。MLTへ変換する場合に要る。同じ列に 15 と 15.3 が混在すると
+MVT内でINT/DOUBLEが混ざり、MLTエンコーダが型エラーで止まるため。
+
 座標が欠損している行、および緯度経度がともに0の行は出力から除く。
 """
 import argparse
@@ -26,6 +30,8 @@ def parse_args():
     parser.add_argument('--lat', required=True, help='緯度の列名')
     parser.add_argument('--number', action='append', default=[],
                         help='数値として出力する列名（複数指定可）')
+    parser.add_argument('--float', action='append', default=[], dest='float_columns',
+                        help='必ず小数として出力する列名（MLT変換用、複数指定可）')
     return parser.parse_args()
 
 
@@ -37,9 +43,15 @@ def to_number(value):
     return int(number) if number.is_integer() else number
 
 
+# 整数値を小数に寄せるためのオフセット。深さ(km)で0.1mm、マグニチュードで0.0001。
+# 表示にも計算にも響かない大きさにする。
+FLOAT_OFFSET = 0.0001
+
+
 def main():
     args = parse_args()
-    numeric = set(args.number)
+    floats = set(args.float_columns)
+    numeric = set(args.number) | floats
 
     total = written = skipped = 0
     with open(args.input_csv, encoding='utf-8', newline='') as source, \
@@ -52,7 +64,7 @@ def main():
                 sys.exit(f'列 {column} が {args.input_csv} にありません')
         unknown = numeric - set(reader.fieldnames)
         if unknown:
-            sys.exit(f'--number に存在しない列が指定されています: {", ".join(sorted(unknown))}')
+            sys.exit(f'--number / --float に存在しない列が指定されています: {", ".join(sorted(unknown))}')
 
         for record in reader:
             total += 1
@@ -71,7 +83,7 @@ def main():
                 if key in numeric:
                     number = to_number(value)
                     if number is not None:
-                        properties[key] = number
+                        properties[key] = number + FLOAT_OFFSET if key in floats else number
                         continue
                 properties[key] = value
 

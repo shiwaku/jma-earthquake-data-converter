@@ -107,6 +107,43 @@ tippecanoe -zg -B7 -rg -o shindo_convert.pmtiles -r1 -d8 -pf -pk shindo_convert.
 #### 人口集中地区（2020年）
 `https://shi-works.com/pmtiles/r2DID/2020_did_ddsw_01-47_JGD2011.pmtiles`,12.7MB
 
+## 震源データをMLT形式へ変換（build_mlt_tiles.sh）
+[MLT（MapLibre Tile）](https://maplibre.org/maplibre-tile-spec/)はMVTの後継として策定された形式で、カラム指向のレイアウトと型別の軽量エンコーディングでサイズを削減します。震源データで試した手順を `src/build_mlt_tiles.sh` に置いています（WSL Ubuntu で確認）。
+
+```
+bash src/build_mlt_tiles.sh work/hypocenter_convert.csv work/mlt
+```
+
+MLTへはMVTを経由します。参考実装のEncode CLIがMVTを入力に取る**トランスコーダ**で、タイル自体は作れないためです。
+
+```
+CSV → GeoJSONSeq（csv2geojsonseq.py）→ MVT（tippecanoe）→ MLT（encode.jar）
+```
+
+エンコーダは [maplibre-tile-spec](https://github.com/maplibre/maplibre-tile-spec) から自前でビルドします（Java 21以上。17ではビルド不可）。
+
+```
+git clone --depth=1 https://github.com/maplibre/maplibre-tile-spec.git ~/mlt-spec
+cd ~/mlt-spec/java && chmod +x gradlew && ./gradlew cli
+```
+
+### 計測結果（震源214,639件・z0-8・495タイル・間引きなし）
+| 形式 | サイズ | MVT非圧縮比 |
+|---|---:|---:|
+| MVT（非圧縮） | 159,481,388 B | 基準 |
+| MLT（既定） | 105,892,279 B | 66.4%（33.6%削減） |
+| MLT（`--enable-fastpfor --enable-fsst --sort-ids`） | 57,100,205 B | 35.8%（64.2%削減） |
+| MVT（gzip -9） | 40,109,812 B | 25.2% |
+
+- **軽量エンコーディングは既定でオフ**です。`--enable-fastpfor`（整数列）と`--enable-fsst`（文字列列）を有効にすると削減率が倍近くになります。既定はMortonのみが有効な状態です。
+- 上表のとおり、転送量だけならgzip圧縮したMVTのほうが小さくなります。MLTの狙いは解凍とパースを経ずGPUバッファへ載せられることなので、サイズだけで採否を判断すべきではありません（デコード速度は未計測）。
+- 本スクリプトは参考実装に合わせて既定設定で変換します。デコーダ側の実装が揃っていない環境で読めなくなることを避けるためです。
+
+### 注意点
+- 震源は点の密度そのものが情報のため、tippecanoeでは `-r1 -pf -pk` を使い間引きを止めます。`-ad` を使うと密なタイルで9割以上の地物が捨てられます。
+- 整数値と小数が混在する列はMVT内でINT/DOUBLEが混ざり、MLTエンコーダが型エラーで停止します。`csv2geojsonseq.py --float` で微小なオフセットを足して回避します。
+- MLTの3D座標対応は仕様にはありますが、JS側は未実装です（デコーダの `VertexBufferType.VEC_3` は参照0件、MapLibre GL JS の MLT アダプタは `new Point(coord.x, coord.y)` でz値を捨てます）。深さを3D表示する場合は、z値を属性で運んで描画側で組み立てる必要があります。
+
 ## ビューワ（viewer/）
 - 上記デモサイト（`index.html`）を作り直したものです。Vite + TypeScript + MapLibre GL JS 6。
 - 旧デモサイトは表示できる地震が14件の固定プルダウンでしたが、こちらは**最大震度3以上の15,480件**から震央地名・年月日・マグニチュード・震度で検索できます。
