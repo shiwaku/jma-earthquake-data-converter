@@ -45,7 +45,10 @@ export interface FilterUpdate {
 export interface SwatchItem {
   color: string
   label: string
-  shape: 'circle' | 'square'
+  /** 地図での描かれ方に合わせる。cross は震源の×印。 */
+  shape: 'circle' | 'square' | 'cross'
+  /** cross の縁取りの色。地図側の text-halo-color に合わせる。 */
+  haloColor?: string
 }
 
 export type Legend =

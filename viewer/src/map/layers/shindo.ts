@@ -2,7 +2,7 @@ import type { FilterSpecification, LayerSpecification } from 'maplibre-gl'
 import { GLYPH_FONT } from '../basemap'
 import { pmtilesUrl } from '../../lib/pmtiles'
 import { coordFooter, esc, prop, row } from '../../lib/format'
-import { SHINDO_CLASSES, shindoColorExpression } from './shindoScale'
+import { SHINDO_CLASSES, shindoColorExpression, shindoInkExpression } from './shindoScale'
 import type { LayerModule, PaintContext, RenderContext } from './types'
 
 const KEY = 'shindo'
@@ -41,7 +41,7 @@ export const shindoLayer: LayerModule = {
         filter,
         paint: {
           'circle-color': shindoColorExpression(),
-          'circle-radius': ['interpolate', ['linear'], ['zoom'], 4, 4, 8, 9, 12, 14],
+          'circle-radius': ['step', ['zoom'], 5, 7.5, 9],
           'circle-stroke-color': 'rgba(0, 0, 0, 0.5)',
           'circle-stroke-width': 1,
           'circle-opacity': ctx.opacity,
@@ -54,18 +54,17 @@ export const shindoLayer: LayerModule = {
         source: KEY,
         'source-layer': this.def.sourceLayer,
         filter,
-        minzoom: 7,
+        // 円が9pxに広がるズームから出す。5pxの円に数字を載せても読めない。
+        minzoom: 7.5,
         layout: {
           'text-field': ['get', '震度'],
           'text-font': GLYPH_FONT,
-          'text-size': 11,
-          'text-offset': [0, -1.2],
-          'text-allow-overlap': false,
+          'text-size': 16,
+          'text-allow-overlap': true,
+          'text-ignore-placement': true,
         },
         paint: {
-          'text-color': ctx.theme === 'dark' ? '#ffffff' : '#222222',
-          'text-halo-color': ctx.theme === 'dark' ? '#000000' : '#ffffff',
-          'text-halo-width': 1.2,
+          'text-color': shindoInkExpression(),
           'text-opacity': ctx.opacity,
         },
       } as LayerSpecification,
@@ -76,9 +75,8 @@ export const shindoLayer: LayerModule = {
     return [
       { id: POINT_ID, prop: 'circle-opacity', value: ctx.opacity },
       { id: POINT_ID, prop: 'circle-stroke-opacity', value: ctx.opacity },
+      // 文字色は階級で決まるので、テーマでは変えない
       { id: LABEL_ID, prop: 'text-opacity', value: ctx.opacity },
-      { id: LABEL_ID, prop: 'text-color', value: ctx.theme === 'dark' ? '#ffffff' : '#222222' },
-      { id: LABEL_ID, prop: 'text-halo-color', value: ctx.theme === 'dark' ? '#000000' : '#ffffff' },
     ]
   },
 
