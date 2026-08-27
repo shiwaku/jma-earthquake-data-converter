@@ -144,10 +144,7 @@ export function createHypocenter3d(map: MapLibreMap, store: AppStore): void {
 
   function enable(): void {
     if (!overlay) {
-      // interleaved: true は maplibre-gl 6 の内部APIと噛み合わず
-      // 「Cannot read properties of undefined (reading 'height')」で描画が落ちる。
-      // 地形を使っていないので深度共有の利点は小さく、オーバーレイ描画で足りる。
-      overlay = new MapboxOverlay({ interleaved: false, layers: [] })
+      overlay = new MapboxOverlay({ interleaved: true, layers: [] })
       map.addControl(overlay)
       map.on('sourcedata', onSourceData)
       map.on('moveend', schedule)

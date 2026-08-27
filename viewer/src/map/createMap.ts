@@ -25,6 +25,25 @@ setWorkerUrl(workerUrl)
 const ATTRIBUTION =
   '<a href="https://www.data.jma.go.jp/eqev/data/bulletin/shindo.html" target="_blank" rel="noreferrer">気象庁 地震月報(カタログ編)</a>'
 
+/**
+ * deck.gl（@deck.gl/mapbox）との互換のため map.transform を生やす。
+ *
+ * deck.gl の getViewport は `map.transform.height` を読んでニアクリップ面を正規化する。
+ * maplibre 6 で transform が `map._camera.transform` へ移ったため、そのままでは
+ * interleaved 描画が「Cannot read properties of undefined (reading 'height')」で落ちる。
+ *
+ * deck.gl が transform を触るのはここと地形使用時だけで、いずれも読み取りのみ。
+ * 別名を用意すれば足りる。maplibre 側が公開APIに戻すか deck.gl 側が追随したら外す。
+ */
+function exposeTransform(map: MapLibreMap): void {
+  const m = map as unknown as { transform?: unknown; _camera?: { transform?: unknown } }
+  if (m.transform || !m._camera?.transform) return
+  Object.defineProperty(map, 'transform', {
+    get: () => (map as unknown as { _camera: { transform: unknown } })._camera.transform,
+    configurable: true,
+  })
+}
+
 export function createMap(container: string, state: AppState): MapLibreMap {
   const protocol = new Protocol()
   addProtocol('pmtiles', protocol.tile)
@@ -43,6 +62,8 @@ export function createMap(container: string, state: AppState): MapLibreMap {
     maxTileCacheSize: isMobile ? 24 : undefined,
     pixelRatio: isMobile ? Math.min(window.devicePixelRatio || 1, 2) : undefined,
   })
+
+  exposeTransform(map)
 
   map.addControl(new NavigationControl({ visualizePitch: true }), 'top-right')
   map.addControl(new FullscreenControl(), 'top-right')
