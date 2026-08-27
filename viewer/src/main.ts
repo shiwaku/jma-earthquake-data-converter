@@ -2,6 +2,8 @@ import './style.css'
 
 import { createDataLayers } from './map/dataLayers'
 import { createEventCamera } from './map/eventCamera'
+import { createInteractions } from './map/interactions'
+import { createPopup } from './map/popup'
 import { createMap } from './map/createMap'
 import { createAppStore } from './state'
 import { createBasemapSwitch } from './ui/basemapSwitch'
@@ -21,6 +23,8 @@ const map = createMap('map', store.get())
 
 createDataLayers(map, store)
 createEventCamera(map, store, hasInitialHash)
+createInteractions(map, store)
+createPopup(map, store)
 createBasemapSwitch(map, store)
 createThemeToggle(store)
 createPanel()
