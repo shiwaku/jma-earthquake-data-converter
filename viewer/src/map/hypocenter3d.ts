@@ -131,32 +131,45 @@ export function createHypocenter3d(map: MapLibreMap, store: AppStore): void {
     requestAnimationFrame(collect)
   }
 
+/**
+ * 点の重ね合わせで密度を見せるための基準不透明度。
+ * レイヤーパネルのスライダー値にこれを掛ける。濃くすると点が一枚の塊になって
+ * 深さが読めなくなるため、上限をここで抑える。
+ */
+const BASE_OPACITY = 0.25
+
   function render(): void {
     if (!overlay) return
     // キャッシュは明滅を防ぐため消さない。代わりにここで表示中のレイヤーだけへ絞る。
-    // これをしないとレイヤーをOFFにしても点が残る。
+    // 不透明度はレイヤーごとに違うので、ソース単位でレイヤーを分ける。
     const layers = store.get().layers
-    const data = [...cache.values()].filter((d) => layers[d.source]?.visible)
+    const bySource = new Map<string, Point3D[]>()
+    for (const d of cache.values()) {
+      if (!layers[d.source]?.visible) continue
+      const list = bySource.get(d.source)
+      if (list) list.push(d)
+      else bySource.set(d.source, [d])
+    }
+
     overlay.setProps({
-      layers: [
-        new ScatterplotLayer<Point3D>({
-          id: 'hypocenter-3d',
-          data,
-          // 参考実装（japan-eq-locator）と同じく大きさは一定にして、重ね合わせの
-          // 濃淡で密度を見せる。マグニチュードで変えると重なって潰れる。
-          getPosition: (d) => d.position,
-          getFillColor: (d) => d.color,
-          // 参考実装と同じ考え方。点を小さく薄くして、重なりの濃淡で密度を見せる。
-          // 大きく濃くすると点が一枚の塊になって深さが読めない。
-          getRadius: 500,
-          radiusMinPixels: 1,
-          radiusMaxPixels: 4,
-          opacity: 0.25,
-          billboard: true,
-          antialiasing: false,
-          pickable: false,
-        }),
-      ],
+      layers: [...bySource].map(
+        ([source, data]) =>
+          new ScatterplotLayer<Point3D>({
+            id: `hypocenter-3d-${source}`,
+            data,
+            // 大きさは一定にして、重ね合わせの濃淡で密度を見せる。
+            // マグニチュードで変えると重なって潰れる。
+            getPosition: (d) => d.position,
+            getFillColor: (d) => d.color,
+            getRadius: 500,
+            radiusMinPixels: 1,
+            radiusMaxPixels: 4,
+            opacity: (layers[source]?.opacity ?? 1) * BASE_OPACITY,
+            billboard: true,
+            antialiasing: false,
+            pickable: false,
+          }),
+      ),
     })
   }
 
