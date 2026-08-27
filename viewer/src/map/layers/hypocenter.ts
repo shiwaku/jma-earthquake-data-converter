@@ -1,4 +1,4 @@
-import type { FilterSpecification, LayerSpecification } from 'maplibre-gl'
+import type { ExpressionSpecification, FilterSpecification, LayerSpecification } from 'maplibre-gl'
 import { GLYPH_FONT } from '../basemap'
 import { mltTileUrl } from '../../lib/pmtiles'
 import { coordFooter, esc, prop, row } from '../../lib/format'
@@ -9,6 +9,12 @@ const CROSS_ID = `${KEY}-cross`
 
 const CROSS_COLOR = 'rgb(255, 0, 0)'
 const HALO_COLOR = 'rgb(255, 255, 0)'
+
+/** 深さ(km) → 高さ(m)。地下なので負。立体表示でないときは地表に置く。 */
+function depthOffset(depth3d: boolean): ExpressionSpecification | number {
+  if (!depth3d) return 0
+  return ['*', ['to-number', ['get', '深さ'], 0], -1000] as ExpressionSpecification
+}
 
 function filterFor(eventId: string | null): FilterSpecification {
   return ['==', ['get', '地震ID'], eventId ?? ''] as FilterSpecification
@@ -45,6 +51,10 @@ export const hypocenterLayer: LayerModule = {
         layout: {
           'text-field': '×',
           'text-font': GLYPH_FONT,
+          // 深さ(km)ぶん地下へ下げる。maplibre 6.6.0 の symbol-height-offset は
+          // メートル単位のdata-drivenで、負値で地表より下に置ける。
+          // 立体表示していないときは 0（地表）に戻す。
+          'symbol-height-offset': depthOffset(ctx.depth3d),
           'text-size': ['interpolate', ['linear'], ['zoom'], 4, 28, 10, 50],
           'text-allow-overlap': true,
           'text-ignore-placement': true,
@@ -61,6 +71,10 @@ export const hypocenterLayer: LayerModule = {
 
   paintUpdates(ctx: PaintContext) {
     return [{ id: CROSS_ID, prop: 'text-opacity', value: ctx.opacity }]
+  },
+
+  layoutUpdates(ctx: PaintContext) {
+    return [{ id: CROSS_ID, prop: 'symbol-height-offset', value: depthOffset(ctx.depth3d) }]
   },
 
   filters(ctx: RenderContext) {
