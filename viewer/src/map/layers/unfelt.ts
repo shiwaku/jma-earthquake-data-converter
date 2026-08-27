@@ -18,15 +18,19 @@ const KEY = 'unfelt'
 const LOADER_ID = `${KEY}-loader`
 
 /**
- * 数値属性を表示用に丸める。
+ * 数値属性を表示用に丸める。列名は候補を順に見る。
  *
- * MLTタイルの数値列は、整数値だけの列がINTとして書かれると桁が失われるため、
- * 作る側（hypo2geojsonl.py）で +0.0001 して float に固定してある。
- * そのまま出すと「深さ 135.0001」になるので、ここで元の桁に戻す。
+ * MLTタイルの数値列は、整数値だけの列がINTとして書かれると型が混ざって
+ * エンコーダが止まるため、作る側（src/csv2geojsonseq.py の FLOAT_OFFSET）で
+ * +0.0001 して float に固定してある。そのまま出すと「深さ 135.0001」になるので、
+ * ここで元の桁に戻す。
  */
-function num(p: Record<string, unknown>, key: string, digits: number): string {
-  const v = Number(p[key])
-  return Number.isFinite(v) ? v.toFixed(digits) : ''
+function num(p: Record<string, unknown>, keys: string[], digits: number): string {
+  for (const key of keys) {
+    const v = Number(p[key])
+    if (p[key] !== undefined && p[key] !== null && p[key] !== '' && Number.isFinite(v)) return v.toFixed(digits)
+  }
+  return ''
 }
 
 /**
@@ -94,14 +98,15 @@ export const unfeltLayer: LayerModule = {
   },
 
   popupHtml(p, lng, lat) {
-    // 列名は元データ（hypo_dat_converter.py の FIELDS）ではなく、MLTを作るときに
-    // 短くしたほう。深さは 深さ(km) → 深さ、マグニチュードは マグニチュード1 →
-    // マグニチュード になっている。タイルが持つのはこの5列だけで、
-    // 震源決定フラグや観測点数は載っていない。
+    // 列名はタイルの作り方で2通りある。配信中のタイルは短くした名前（深さ /
+    // マグニチュード）で、元データ（hypo_dat_converter.py の FIELDS）と
+    // src/build_mlt_tiles.sh が渡すのは 深さ(km) / マグニチュード1。
+    // 作り直したタイルに差し替えても読めるよう、どちらも見る。
+    // 震源決定フラグや観測点数は配信中のタイルに載っていない。
     const rows =
       row('発生時刻', prop(p, 'DateTime'), true) +
-      row('深さ(km)', num(p, '深さ', 2)) +
-      row('マグニチュード', num(p, 'マグニチュード', 1)) +
+      row('深さ(km)', num(p, ['深さ', '深さ(km)'], 2)) +
+      row('マグニチュード', num(p, ['マグニチュード', 'マグニチュード1'], 1)) +
       row('地震ID', prop(p, '地震ID'))
     return (
       `<div class="pp-title">${esc(prop(p, '震央地名') || this.def.name)}</div>` +
