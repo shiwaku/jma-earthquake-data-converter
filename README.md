@@ -8,9 +8,9 @@
 
 **[▶ デモサイトを開く](https://shiwaku.github.io/jma-earthquake-data-converter/)**
 
-[![スクリーンショット](docs/screenshot.png)](https://shiwaku.github.io/jma-earthquake-data-converter/)
+<video src="https://github.com/shiwaku/jma-earthquake-data-converter/raw/main/docs/demo.mp4" controls muted loop width="100%"></video>
 
-<sub>2016年4月16日 熊本県熊本地方（M7.3・最大震度7）の震度分布</sub>
+<sub>震源を深さ方向に配置した立体表示。色は深さを表す（浅いほど暖色）</sub>
 
 ## 収録データ
 
