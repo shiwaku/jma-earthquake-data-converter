@@ -1,4 +1,4 @@
-import { LAYERS } from '../map/layers/registry'
+import { LAYER_LINKS, LAYERS } from '../map/layers/registry'
 import type { LayerModule } from '../map/layers/types'
 import { setLayerState, type AppStore } from '../state'
 import { legendMarkup } from './legend'
@@ -32,7 +32,14 @@ export function createLayerPanel(store: AppStore): void {
     const check = document.createElement('input')
     check.type = 'checkbox'
     check.checked = initial.visible
-    check.addEventListener('change', () => setLayerState(store, key, { visible: check.checked }))
+    check.addEventListener('change', () => {
+      setLayerState(store, key, { visible: check.checked })
+      // 有効にしたときだけ、連動先も一緒に出す。
+      if (!check.checked) return
+      for (const linked of LAYER_LINKS[key] ?? []) {
+        if (!store.get().layers[linked]?.visible) setLayerState(store, linked, { visible: true })
+      }
+    })
 
     const sw = document.createElement('span')
     sw.className = 'switch'

@@ -55,6 +55,8 @@ const DEPTH_STOPS: [number, [number, number, number]][] = [
 interface Point3D {
   position: [number, number, number]
   color: [number, number, number]
+  /** 由来のレイヤーキー。表示中のレイヤーだけを描くために持つ。 */
+  source: string
 }
 
 /** 深さ(km)に対応する色。区間ごとに線形補間する。 */
@@ -101,9 +103,11 @@ export function createHypocenter3d(map: MapLibreMap, store: AppStore): void {
     if (!store.get().depth3d) return
     let added = false
     const features = SOURCES.flatMap(([source, sourceLayer]) =>
-      map.getSource(source) ? map.querySourceFeatures(source, { sourceLayer }) : [],
+      map.getSource(source)
+        ? map.querySourceFeatures(source, { sourceLayer }).map((f) => ({ f, source }))
+        : [],
     )
-    for (const f of features) {
+    for (const { f, source } of features) {
       const p = f.properties ?? {}
       const g = f.geometry
       if (g?.type !== 'Point') continue
@@ -115,7 +119,7 @@ export function createHypocenter3d(map: MapLibreMap, store: AppStore): void {
       // 深さはkm。地下は負の高さになる。
       const km = Number(p['深さ'] ?? p['深さ(km)'] ?? 0)
       const z = -(Number.isFinite(km) ? km : 0) * 1000
-      cache.set(id, { position: [lng, lat, z], color: depthColor(km) })
+      cache.set(id, { position: [lng, lat, z], color: depthColor(km), source })
       added = true
     }
     if (added) render()
@@ -129,11 +133,15 @@ export function createHypocenter3d(map: MapLibreMap, store: AppStore): void {
 
   function render(): void {
     if (!overlay) return
+    // キャッシュは明滅を防ぐため消さない。代わりにここで表示中のレイヤーだけへ絞る。
+    // これをしないとレイヤーをOFFにしても点が残る。
+    const layers = store.get().layers
+    const data = [...cache.values()].filter((d) => layers[d.source]?.visible)
     overlay.setProps({
       layers: [
         new ScatterplotLayer<Point3D>({
           id: 'hypocenter-3d',
-          data: [...cache.values()],
+          data,
           // 参考実装（japan-eq-locator）と同じく大きさは一定にして、重ね合わせの
           // 濃淡で密度を見せる。マグニチュードで変えると重なって潰れる。
           getPosition: (d) => d.position,
@@ -181,7 +189,13 @@ export function createHypocenter3d(map: MapLibreMap, store: AppStore): void {
     }
     // 背景やテーマの切替でスタイルごと作り直される。震源レイヤーのON/OFFでも
     // ソースが出入りするため、いずれも取り直す。
-    if (s.depth3d && (s.theme !== prev.theme || s.basemap !== prev.basemap || s.layers !== prev.layers)) {
+    if (s.layers !== prev.layers) {
+      // 表示の切替は即座に反映する。新たにONになった分は idle 後に集め直す。
+      render()
+      map.once('idle', schedule)
+      return
+    }
+    if (s.depth3d && (s.theme !== prev.theme || s.basemap !== prev.basemap)) {
       map.once('idle', schedule)
     }
   })

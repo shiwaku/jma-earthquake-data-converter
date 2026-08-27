@@ -16,6 +16,17 @@ import type { LayerModule } from './types'
  */
 export const LAYERS: LayerModule[] = [didLayer, unfeltLayer, hypocenterLayer, shindoLayer]
 
+/**
+ * あるレイヤーを有効にしたとき、一緒に有効にするレイヤー。
+ *
+ * 震源（有感のみ）だけを出しても地震の位置が分かるだけで、その地震で
+ * どこがどれだけ揺れたかは見えない。両方そろって初めて意味を持つため連動させる。
+ * 無効にするときは連動しない。片方だけ見たい場面があるため。
+ */
+export const LAYER_LINKS: Record<string, string[]> = {
+  hypocenter: ['shindo'],
+}
+
 export function layerByKey(key: string): LayerModule | undefined {
   return LAYERS.find((m) => m.def.key === key)
 }
