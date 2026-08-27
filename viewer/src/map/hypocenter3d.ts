@@ -2,6 +2,7 @@ import { MapboxOverlay } from '@deck.gl/mapbox'
 import { ScatterplotLayer } from '@deck.gl/layers'
 import type { Map as MapLibreMap } from 'maplibre-gl'
 
+import { depthColor } from './layers/depthScale'
 import type { AppStore, Selection } from '../state'
 
 /**
@@ -28,28 +29,6 @@ import type { AppStore, Selection } from '../state'
 const SOURCES: [string, string][] = [
   ['hypocenter', 'hypocenter'],
   ['unfelt', 'unfelt'],
-]
-
-/**
- * 深さ→色の対応。参考実装（japan-eq-locator）と同じ Spectral 系の並びだが、
- * 目盛りは線形にしない。
- *
- * 震源の深さは極端に浅い側へ偏っている（10km以浅が63.7%、70km以浅が96.0%、
- * 200km以深は0.4%）。0〜700kmを線形に割り当てると、ほぼ全部が最初の色に潰れて
- * 深さの違いが読めない。浅い側に色を厚く配ることで、地殻内・スラブ内・深発を
- * 見分けられるようにする。
- */
-const DEPTH_STOPS: [number, [number, number, number]][] = [
-  [0, [158, 1, 66]],
-  [10, [213, 62, 79]],
-  [20, [244, 109, 67]],
-  [40, [253, 174, 97]],
-  [70, [254, 224, 139]],
-  [100, [255, 255, 191]],
-  [150, [171, 221, 164]],
-  [250, [102, 194, 165]],
-  [400, [50, 136, 189]],
-  [700, [94, 79, 162]],
 ]
 
 interface Point3D {
@@ -81,38 +60,6 @@ export interface Hypocenter3dPicker {
   hitTest(x: number, y: number): boolean
   /** その位置の点を属性ごと拾う。当たらなければ null。 */
   pick(x: number, y: number): Selection | null
-}
-
-/** 深さ(km)に対応する色。区間ごとに線形補間する。 */
-function depthColor(km: number): [number, number, number] {
-  const d = Math.max(0, km)
-  for (let i = 1; i < DEPTH_STOPS.length; i++) {
-    const [d1, c1] = DEPTH_STOPS[i - 1]
-    const [d2, c2] = DEPTH_STOPS[i]
-    if (d <= d2) {
-      const k = (d - d1) / (d2 - d1)
-      return [
-        Math.round(c1[0] + (c2[0] - c1[0]) * k),
-        Math.round(c1[1] + (c2[1] - c1[1]) * k),
-        Math.round(c1[2] + (c2[2] - c1[2]) * k),
-      ]
-    }
-  }
-  return DEPTH_STOPS[DEPTH_STOPS.length - 1][1]
-}
-
-/** 凡例のグラデーション（CSS）。地図上の凡例と配色をずらさないため、ここから作る。 */
-export function depthLegendGradient(): string {
-  const last = DEPTH_STOPS[DEPTH_STOPS.length - 1][0]
-  const stops = DEPTH_STOPS.map(([d, c]) => `rgb(${c[0]},${c[1]},${c[2]}) ${((d / last) * 100).toFixed(1)}%`)
-  return `linear-gradient(to right, ${stops.join(', ')})`
-}
-
-/** 凡例の目盛り。非線形なので位置を計算して置く。 */
-export const DEPTH_TICKS = [0, 70, 150, 400, 700]
-
-export function depthTickPosition(km: number): number {
-  return (km / DEPTH_STOPS[DEPTH_STOPS.length - 1][0]) * 100
 }
 
 export function createHypocenter3d(map: MapLibreMap, store: AppStore): Hypocenter3dPicker {

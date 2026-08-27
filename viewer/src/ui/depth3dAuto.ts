@@ -1,6 +1,6 @@
 import type { Map as MapLibreMap } from 'maplibre-gl'
 
-import { DEPTH_TICKS, depthLegendGradient, depthTickPosition } from '../map/hypocenter3d'
+import { depthLegendCss, depthLegendTicks } from '../map/layers/depthScale'
 import type { AppStore } from '../state'
 
 /**
@@ -19,14 +19,14 @@ const PITCH_DIM_OFF = 20
 export function createDepth3dAuto(map: MapLibreMap, store: AppStore): void {
   const legend = document.getElementById('depth3d-legend') as HTMLElement | null
 
-  // 配色は hypocenter3d.ts が持つ。凡例をそこから組み立てて、地図と食い違わせない。
+  // 配色は map/layers/depthScale.ts が持つ。凡例をそこから組み立てて、地図と食い違わせない。
   if (legend) {
     const bar = legend.querySelector('.dl-bar') as HTMLElement
     const ticks = legend.querySelector('.dl-ticks') as HTMLElement
-    bar.style.background = depthLegendGradient()
-    ticks.innerHTML = DEPTH_TICKS.map(
-      (km) => `<span style="left:${depthTickPosition(km).toFixed(1)}%">${km}${km === 700 ? 'km' : ''}</span>`,
-    ).join('')
+    bar.style.background = depthLegendCss()
+    ticks.innerHTML = depthLegendTicks()
+      .map(({ pos, label }) => `<span style="left:${pos.toFixed(1)}%">${label}</span>`)
+      .join('')
     legend.hidden = false
   }
 
