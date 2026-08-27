@@ -1,0 +1,24 @@
+# 作業ディレクトリ（ダウンロードした生データと中間・最終成果物）
+# 最終成果物はGitHubのファイルサイズ上限を超えるためReleasesで配布する
+work/
+
+# 変換の中間・最終成果物（作業ディレクトリ外に出力した場合）
+zip/
+dat/
+hypocenter.csv
+shindo.csv
+hypocenter_convert.csv
+shindo_convert.csv
+*.parquet
+*.fgb
+*.pmtiles
+*.geojson
+
+# 更新チェックが出力するレポート
+jma_update_report.md
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
