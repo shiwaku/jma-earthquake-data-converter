@@ -15,3 +15,11 @@ export const PMTILES_BASE = (import.meta.env.VITE_PMTILES_BASE || DEFAULT_BASE).
 export function pmtilesUrl(path: string): string {
   return `${PMTILES_BASE}/${path}`
 }
+
+/**
+ * MLTタイルのURLテンプレート。PMTilesと同じルートの隣（.../mlt）に置いてある。
+ * 例: https://shi-works.com/mlt/jma-earthquake/{z}/{x}/{y}.mlt
+ */
+export function mltTileUrl(dataset: string): string {
+  return `${PMTILES_BASE.replace(/\/pmtiles$/, '/mlt')}/${dataset}/{z}/{x}/{y}.mlt`
+}

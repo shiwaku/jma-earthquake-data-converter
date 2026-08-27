@@ -1,4 +1,4 @@
-import type { Map as MapLibreMap } from 'maplibre-gl'
+import type { Map as MapLibreMap, SourceSpecification } from 'maplibre-gl'
 import { getBasemapStyle } from './basemap'
 import { LAYERS } from './layers/registry'
 import type { LayerModule, PaintContext } from './layers/types'
@@ -9,6 +9,28 @@ export function activePickIds(map: MapLibreMap, state: AppState): string[] {
   return LAYERS.filter((m) => state.layers[m.def.key].visible)
     .map((m) => m.pickLayerId)
     .filter((id) => map.getLayer(id))
+}
+
+/**
+ * ソース定義。MLT は encoding を worker へ伝える必要があり、それは TileJSON 経由でしか
+ * 伝わらない。インラインの tiles:[...] だと MVT として誤パースされて失敗するため、
+ * TileJSON を Blob URL に組み立てて url で渡す。
+ */
+function sourceSpec(mod: LayerModule): SourceSpecification {
+  const { url, sourceLayer, attribution, format, minzoom, maxzoom } = mod.def
+  if (format !== 'mlt') {
+    return { type: 'vector', url: `pmtiles://${url}`, attribution }
+  }
+  const tilejson = {
+    tilejson: '2.2.0',
+    tiles: [url],
+    minzoom: minzoom ?? 0,
+    maxzoom: maxzoom ?? 8,
+    attribution,
+    vector_layers: [{ id: sourceLayer, fields: {} }],
+  }
+  const blob = URL.createObjectURL(new Blob([JSON.stringify(tilejson)], { type: 'application/json' }))
+  return { type: 'vector', url: blob, encoding: 'mlt', attribution } as SourceSpecification
 }
 
 export function createDataLayers(map: MapLibreMap, store: AppStore): void {
@@ -30,13 +52,7 @@ export function createDataLayers(map: MapLibreMap, store: AppStore): void {
   }
 
   function ensureLayer(mod: LayerModule): void {
-    if (!map.getSource(mod.def.key)) {
-      map.addSource(mod.def.key, {
-        type: 'vector',
-        url: `pmtiles://${mod.def.url}`,
-        attribution: mod.def.attribution,
-      })
-    }
+    if (!map.getSource(mod.def.key)) map.addSource(mod.def.key, sourceSpec(mod))
     const before = beforeIdFor(mod)
     for (const spec of mod.specs(ctxFor(mod))) {
       if (map.getLayer(spec.id)) continue
