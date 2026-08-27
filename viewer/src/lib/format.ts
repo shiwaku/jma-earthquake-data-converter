@@ -15,11 +15,14 @@ export function row(label: string, value: string, strong = false): string {
   return `<dt>${esc(label)}</dt><dd${strong ? ' class="pp-strong"' : ''}>${esc(value)}</dd>`
 }
 
-/** クリック地点の座標と外部地図サービスへのリンク。 */
-export function coordFooter(lng: number, lat: number): string {
+/**
+ * 座標と外部地図サービスへのリンク。
+ * 既定はクリック地点だが、地物そのものの座標を出す場合は label を差し替える。
+ */
+export function coordFooter(lng: number, lat: number, label = 'クリック位置'): string {
   const q = `${lat},${lng}`
   return (
-    `<div class="pp-foot">座標: ${lat.toFixed(7)}, ${lng.toFixed(7)}（クリック位置）<br />` +
+    `<div class="pp-foot">座標: ${lat.toFixed(7)}, ${lng.toFixed(7)}（${esc(label)}）<br />` +
     `<a href="https://www.google.com/maps?q=${q}&hl=ja" target="_blank" rel="noopener">🌎 Google Maps</a> ` +
     `<a href="https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${q}&hl=ja" target="_blank" rel="noopener">📷 Street View</a></div>`
   )

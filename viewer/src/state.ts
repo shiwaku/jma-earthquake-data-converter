@@ -13,6 +13,11 @@ export interface Selection {
   properties: Record<string, unknown>
   lng: number
   lat: number
+  /**
+   * 立体表示の点を選んだときの高さ(m)。地下なので負の値になる。
+   * ポップアップを地表ではなく点そのものに合わせるために持つ。
+   */
+  altitude?: number
 }
 
 export interface AppState {

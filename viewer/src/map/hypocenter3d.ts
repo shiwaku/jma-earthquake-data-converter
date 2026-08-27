@@ -2,7 +2,7 @@ import { MapboxOverlay } from '@deck.gl/mapbox'
 import { ScatterplotLayer } from '@deck.gl/layers'
 import type { Map as MapLibreMap } from 'maplibre-gl'
 
-import type { AppStore } from '../state'
+import type { AppStore, Selection } from '../state'
 
 /**
  * 震源を深さで立体表示する。
@@ -53,10 +53,34 @@ const DEPTH_STOPS: [number, [number, number, number]][] = [
 ]
 
 interface Point3D {
+  /** 地物の同一性（featureKey）。属性を引き直すときの手がかりに持つ。 */
+  id: string
   position: [number, number, number]
   color: [number, number, number]
   /** 由来のレイヤーキー。表示中のレイヤーだけを描くために持つ。 */
   source: string
+}
+
+/**
+ * 点の同一性。
+ * 地震IDは一意ではない（同じ秒に決定された別レコードが衝突する）ため座標も混ぜる。
+ * タイル境界をまたぐ重複を潰すのが目的なので、丸めて十分。
+ */
+function featureKey(p: Record<string, unknown>, lng: number, lat: number): string {
+  return `${p['地震ID'] ?? ''}|${lng.toFixed(4)},${lat.toFixed(4)}`
+}
+
+/**
+ * クリック・ホバーの当たり半径(px)。点は最大4pxしかなく、そのままでは狙えない。
+ */
+const PICK_RADIUS = 5
+
+/** 立体表示の点を画面座標で拾う口。クリック処理（map/interactions.ts）が使う。 */
+export interface Hypocenter3dPicker {
+  /** その位置に点があるか。カーソル形状の判定に使う軽いほう。 */
+  hitTest(x: number, y: number): boolean
+  /** その位置の点を属性ごと拾う。当たらなければ null。 */
+  pick(x: number, y: number): Selection | null
 }
 
 /** 深さ(km)に対応する色。区間ごとに線形補間する。 */
@@ -91,7 +115,7 @@ export function depthTickPosition(km: number): number {
   return (km / DEPTH_STOPS[DEPTH_STOPS.length - 1][0]) * 100
 }
 
-export function createHypocenter3d(map: MapLibreMap, store: AppStore): void {
+export function createHypocenter3d(map: MapLibreMap, store: AppStore): Hypocenter3dPicker {
   let overlay: MapboxOverlay | null = null
   // querySourceFeatures はタイルのロード・アンロードで返る集合が変動する。
   // 取得したものを加算キャッシュして削除しないことで、点の明滅を防ぐ。
@@ -112,14 +136,12 @@ export function createHypocenter3d(map: MapLibreMap, store: AppStore): void {
       const g = f.geometry
       if (g?.type !== 'Point') continue
       const [lng, lat] = g.coordinates as [number, number]
-      // 地震IDは一意ではない（同じ秒の別レコードが衝突する）ため座標も混ぜる。
-      // タイル境界をまたぐ重複を潰すのが目的なので、丸めて十分。
-      const id = `${p['地震ID'] ?? ''}|${lng.toFixed(4)},${lat.toFixed(4)}`
+      const id = featureKey(p, lng, lat)
       if (cache.has(id)) continue
       // 深さはkm。地下は負の高さになる。
       const km = Number(p['深さ'] ?? p['深さ(km)'] ?? 0)
       const z = -(Number.isFinite(km) ? km : 0) * 1000
-      cache.set(id, { position: [lng, lat, z], color: depthColor(km), source })
+      cache.set(id, { id, position: [lng, lat, z], color: depthColor(km), source })
       added = true
     }
     if (added) render()
@@ -167,7 +189,9 @@ const BASE_OPACITY = 0.25
             opacity: (layers[source]?.opacity ?? 1) * BASE_OPACITY,
             billboard: true,
             antialiasing: false,
-            pickable: false,
+            // ポップアップのために拾えるようにする。点が小さいので当たり判定は
+            // pickObject 側の radius で広げる。
+            pickable: true,
           }),
       ),
     })
@@ -194,6 +218,38 @@ const BASE_OPACITY = 0.25
     schedule()
   }
 
+  /**
+   * 拾った点に対応する地物の属性。
+   * 点群は表示に要る値しか持たない（全点ぶんの属性を抱えるとメモリを食う）ため、
+   * 拾えたときだけソースから引き直す。
+   */
+  function propertiesOf(d: Point3D): Record<string, unknown> | null {
+    const entry = SOURCES.find(([source]) => source === d.source)
+    if (!entry || !map.getSource(d.source)) return null
+    const eqId = d.id.slice(0, d.id.indexOf('|'))
+    // 読み込み済みタイルの全件を舐めさせないよう地震IDで絞る。
+    // タイル側で数値になっている場合に備えて文字列化してから比べる。
+    const feats = map.querySourceFeatures(d.source, {
+      sourceLayer: entry[1],
+      filter: ['==', ['to-string', ['get', '地震ID']], eqId],
+    })
+    for (const f of feats) {
+      const g = f.geometry
+      if (g?.type !== 'Point') continue
+      const [lng, lat] = g.coordinates as [number, number]
+      const p = (f.properties ?? {}) as Record<string, unknown>
+      // 地震IDだけでは絞り切れない。キャッシュのキーと同じ作り方で突き合わせる。
+      if (featureKey(p, lng, lat) === d.id) return p
+    }
+    return null
+  }
+
+  function pickPoint(x: number, y: number): Point3D | null {
+    if (!overlay || !store.get().depth3d) return null
+    const info = overlay.pickObject({ x, y, radius: PICK_RADIUS })
+    return (info?.object as Point3D | undefined) ?? null
+  }
+
   store.subscribe((s, prev) => {
     if (s.depth3d !== prev.depth3d) {
       if (s.depth3d) enable()
@@ -214,4 +270,19 @@ const BASE_OPACITY = 0.25
   })
 
   if (store.get().depth3d) enable()
+
+  return {
+    hitTest: (x, y) => pickPoint(x, y) !== null,
+
+    pick(x, y) {
+      const d = pickPoint(x, y)
+      if (!d) return null
+      const properties = propertiesOf(d)
+      // タイルが入れ替わって元の地物が引けないことがある。
+      // 属性のないポップアップを出しても仕方がないので、その場合は拾えなかった扱い。
+      if (!properties) return null
+      const [lng, lat, z] = d.position
+      return { layerKey: d.source, properties, lng, lat, altitude: z }
+    },
+  }
 }

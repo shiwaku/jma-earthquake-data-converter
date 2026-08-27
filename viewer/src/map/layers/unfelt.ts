@@ -18,6 +18,18 @@ const KEY = 'unfelt'
 const LOADER_ID = `${KEY}-loader`
 
 /**
+ * 数値属性を表示用に丸める。
+ *
+ * MLTタイルの数値列は、整数値だけの列がINTとして書かれると桁が失われるため、
+ * 作る側（hypo2geojsonl.py）で +0.0001 して float に固定してある。
+ * そのまま出すと「深さ 135.0001」になるので、ここで元の桁に戻す。
+ */
+function num(p: Record<string, unknown>, key: string, digits: number): string {
+  const v = Number(p[key])
+  return Number.isFinite(v) ? v.toFixed(digits) : ''
+}
+
+/**
  * 無感地震（震度が観測されなかった地震）。
  *
  * 有感地震が震度データ（i*.dat）由来なのに対し、こちらは震源データ（h*.dat）由来。
@@ -51,7 +63,9 @@ export const unfeltLayer: LayerModule = {
   },
 
   layerIds: [LOADER_ID],
-  pickLayerId: LOADER_ID,
+  // 2Dでは拾わない。地表に見えているものが無いのに、震源の真上をクリックすると
+  // ポップアップが出てしまうため。拾うのは立体表示の点（map/hypocenter3d.ts）側。
+  pickLayerId: null,
 
   specs(): LayerSpecification[] {
     return [
@@ -80,18 +94,20 @@ export const unfeltLayer: LayerModule = {
   },
 
   popupHtml(p, lng, lat) {
-    // 列名は hypo_dat_converter.py の FIELDS に合わせる。
+    // 列名は元データ（hypo_dat_converter.py の FIELDS）ではなく、MLTを作るときに
+    // 短くしたほう。深さは 深さ(km) → 深さ、マグニチュードは マグニチュード1 →
+    // マグニチュード になっている。タイルが持つのはこの5列だけで、
+    // 震源決定フラグや観測点数は載っていない。
     const rows =
       row('発生時刻', prop(p, 'DateTime'), true) +
-      row('深さ(km)', prop(p, '深さ(km)')) +
-      row('マグニチュード', prop(p, 'マグニチュード1')) +
-      row('震源決定フラグ', prop(p, '震源決定フラグ')) +
+      row('深さ(km)', num(p, '深さ', 2)) +
+      row('マグニチュード', num(p, 'マグニチュード', 1)) +
       row('地震ID', prop(p, '地震ID'))
     return (
       `<div class="pp-title">${esc(prop(p, '震央地名') || this.def.name)}</div>` +
       `<div class="pp-sub">${esc(this.def.name)}</div>` +
       (rows ? `<dl class="pp-dl">${rows}</dl>` : '') +
-      coordFooter(lng, lat)
+      coordFooter(lng, lat, '震源位置')
     )
   },
 }

@@ -1,25 +1,51 @@
-import type { Map as MapLibreMap } from 'maplibre-gl'
+import type { Map as MapLibreMap, Point } from 'maplibre-gl'
 
 import { activePickIds } from './dataLayers'
+import type { Hypocenter3dPicker } from './hypocenter3d'
 import { layerByPickId } from './layers/registry'
 import type { AppStore } from '../state'
 
 /**
  * クリックで地物を選択し、ホバーでカーソルを変える。
  * 選択そのものは store に入れるだけで、描くのはポップアップ側の仕事。
+ *
+ * 当たり判定は2系統ある。地表に描かれるレイヤーはMapLibreに、
+ * 深さ方向へ配置した震源の点は deck.gl（picker）に問い合わせる。
+ * 見えている点を狙ってクリックするのだから、立体表示の点を先に見る。
  */
-export function createInteractions(map: MapLibreMap, store: AppStore): void {
+export function createInteractions(map: MapLibreMap, store: AppStore, picker: Hypocenter3dPicker): void {
   // ホバーのカーソルはマウス環境だけ。タッチでは意味がないうえ、
   // mousemove がタップのたびに走ってしまう。
   if (window.matchMedia('(hover: hover)').matches) {
-    map.on('mousemove', (e) => {
+    // 立体表示の当たり判定は GPU からの読み戻しを伴うため、mousemove のたびに
+    // 走らせると重い。最後の位置だけを覚えて1フレームに1回へ間引く。
+    let queued = false
+    let last: Point | null = null
+
+    function updateCursor(): void {
+      queued = false
+      if (!last) return
       const ids = activePickIds(map, store.get())
-      const hit = ids.length > 0 && map.queryRenderedFeatures(e.point, { layers: ids }).length > 0
+      const hit =
+        (ids.length > 0 && map.queryRenderedFeatures(last, { layers: ids }).length > 0) ||
+        picker.hitTest(last.x, last.y)
       map.getCanvas().style.cursor = hit ? 'pointer' : ''
+    }
+
+    map.on('mousemove', (e) => {
+      last = e.point
+      if (queued) return
+      queued = true
+      requestAnimationFrame(updateCursor)
     })
   }
 
   map.on('click', (e) => {
+    const hit3d = picker.pick(e.point.x, e.point.y)
+    if (hit3d) {
+      store.set({ selection: hit3d })
+      return
+    }
     const ids = activePickIds(map, store.get())
     const feats = ids.length ? map.queryRenderedFeatures(e.point, { layers: ids }) : []
     if (!feats.length) {

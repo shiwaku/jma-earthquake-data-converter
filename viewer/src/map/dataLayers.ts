@@ -8,7 +8,7 @@ import type { AppState, AppStore } from '../state'
 export function activePickIds(map: MapLibreMap, state: AppState): string[] {
   return LAYERS.filter((m) => state.layers[m.def.key].visible)
     .map((m) => m.pickLayerId)
-    .filter((id) => map.getLayer(id))
+    .filter((id): id is string => id !== null && Boolean(map.getLayer(id)))
 }
 
 /**
