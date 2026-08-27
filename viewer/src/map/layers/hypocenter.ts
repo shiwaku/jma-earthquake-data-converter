@@ -64,7 +64,11 @@ export const hypocenterLayer: LayerModule = {
   },
 
   legend() {
-    return { kind: 'items', items: [{ color: CROSS_COLOR, label: '震源', shape: 'circle' }] }
+    // 地図には×印を出しているので、見本も×にする。丸だと別の記号に見える。
+    return {
+      kind: 'items',
+      items: [{ color: CROSS_COLOR, label: '震源', shape: 'cross', haloColor: HALO_COLOR }],
+    }
   },
 
   popupHtml(p, lng, lat) {

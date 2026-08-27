@@ -13,9 +13,8 @@
   --shadow: 0 10px 30px -10px rgba(16, 24, 40, 0.35), 0 2px 8px -4px rgba(16, 24, 40, 0.2);
   --radius: 16px;
   --radius-sm: 10px;
-  /* 下端の常設タイムバーの高さ。地図コントロールをこの分だけ持ち上げる。
-     このビューワはタイムバーを持たないため0。持たせるときにここを戻す。 */
-  --timebar-h: 0px;
+  /* 下端に常設する「地震の選択」バーの高さ。地図コントロールをこの分だけ持ち上げる。 */
+  --timebar-h: 64px;
   color-scheme: light;
 }
 
@@ -205,10 +204,43 @@ body {
   color: var(--accent-ink);
 }
 
-/* ---- 地震の検索 ---- */
-.event-search {
-  display: grid;
-  gap: 8px;
+/* ---- 地震の選択バー（画面下端に常設） ---- */
+/* パネルの中に入れると、パネルを畳んだとき（スマホでは初期状態）に地震を
+   切り替えられなくなる。独立したバーにして常に出しておく。 */
+.eventbar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: var(--timebar-h);
+  padding: 8px 12px calc(8px + env(safe-area-inset-bottom, 0px));
+  background: var(--surface-solid);
+  border-top: 1px solid var(--line);
+  box-shadow: var(--shadow);
+}
+
+/* 選択中の地震。バーの中では1行に並べる。 */
+.event-current {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.event-current[hidden] {
+  display: none;
+}
+
+.eb-search {
+  position: relative;
+  flex: 0 0 320px;
+  max-width: 46vw;
 }
 
 .event-q {
@@ -232,30 +264,36 @@ body {
   opacity: 0.6;
 }
 
+/* 検索結果はバーの上に開く。バー自体を高くしないため。 */
+.event-pop {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 8px);
+  width: min(420px, 92vw);
+  display: grid;
+  gap: 6px;
+  padding: 8px;
+  background: var(--surface-solid);
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+.event-pop[hidden] {
+  display: none;
+}
+
 .event-status {
   margin: 0;
   font-size: 11px;
   color: var(--ink-3);
 }
 
-/* 選択中の地震。検索語を変えて一覧から外れても手元に残す。 */
-.event-current {
-  display: grid;
-  gap: 2px;
-  padding: 8px 10px;
-  border: 1px solid var(--accent);
-  border-radius: var(--radius-sm);
-}
-
-.event-current[hidden] {
-  display: none;
-}
-
 .event-list {
   list-style: none;
   margin: 0;
   padding: 0;
-  max-height: min(40dvh, 340px);
+  max-height: min(52dvh, 420px);
   overflow-y: auto;
   /* 一覧の端までスクロールしたとき、地図まで巻き込んで動かさない */
   overscroll-behavior: contain;
@@ -300,6 +338,10 @@ body {
 .ev-name {
   font-size: 13px;
   font-weight: 600;
+}
+
+.eventbar .ev-name {
+  font-size: 14px;
 }
 
 .ev-shindo {
@@ -690,7 +732,19 @@ body {
 
 .lg-circle {
   border-radius: 50%;
-  border-color: transparent;
+  /* 地図の circle-stroke-color と同じ縁取り。透明にすると震度1（白）が消える。 */
+  border-color: rgba(0, 0, 0, 0.5);
+}
+
+/* 震源の×印。塗りの見本と幅を揃えつつ、文字として描く。 */
+.lg-cross {
+  border: 0;
+  width: 13px;
+  height: 13px;
+  line-height: 11px;
+  font-size: 17px;
+  font-weight: 700;
+  text-align: center;
 }
 
 /* 連続量（サイクル長）はグラデーションバーで示す。段階リストだと段の境目に意味がある
@@ -965,6 +1019,27 @@ body {
 }
 
 @media (max-width: 640px) {
+  :root {
+    /* 選択中の地震と検索欄が縦に積まれるぶん高くする */
+    --timebar-h: 96px;
+  }
+
+  .eventbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+  }
+
+  .eb-search {
+    flex: none;
+    max-width: none;
+  }
+
+  .event-pop {
+    left: 0;
+    right: 0;
+    width: auto;
+  }
 
   /* タイムバーは常に最前面・最下段。パネル（ボトムシート）はその上に載せる。 */
   .timebar {

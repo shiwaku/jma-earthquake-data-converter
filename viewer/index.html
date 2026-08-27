@@ -26,19 +26,6 @@
     <div id="panel-body" class="panel-body">
       <div class="field">
         <div class="field-head">
-          <span class="field-label">地震</span>
-        </div>
-        <div class="event-search">
-          <input id="event-q" type="search" class="event-q" autocomplete="off"
-            placeholder="震央地名・年月日・M・震度で検索" aria-label="地震を検索" />
-          <div id="event-current" class="event-current" aria-live="polite" hidden></div>
-          <p id="event-status" class="event-status" role="status"></p>
-          <ul id="event-list" class="event-list"></ul>
-        </div>
-      </div>
-
-      <div class="field">
-        <div class="field-head">
           <span class="field-label">レイヤー</span>
         </div>
         <div id="layers" class="toggles"></div>
@@ -59,6 +46,21 @@
       <a href="https://github.com/shiwaku/jma-earthquake-data-converter" target="_blank" rel="noopener">GitHub</a>
       <span id="build-ver" class="build-ver"></span>
     </footer>
+  </section>
+
+  <!-- 地震の選択はパネルの外に常設する。パネルを畳んでも切り替えられるようにするため
+       （スマホではパネルが初期状態で畳まれる）。 -->
+  <section id="eventbar" class="eventbar" aria-label="地震の選択">
+    <div id="event-current" class="event-current" aria-live="polite" hidden></div>
+    <div class="eb-search">
+      <input id="event-q" type="search" class="event-q" autocomplete="off"
+        placeholder="震央地名・年月日・M・震度で検索" aria-label="地震を検索"
+        role="combobox" aria-expanded="false" aria-controls="event-list" />
+      <div id="event-pop" class="event-pop" hidden>
+        <p id="event-status" class="event-status" role="status"></p>
+        <ul id="event-list" class="event-list"></ul>
+      </div>
+    </div>
   </section>
 
   <script type="module" src="/src/main.ts"></script>
