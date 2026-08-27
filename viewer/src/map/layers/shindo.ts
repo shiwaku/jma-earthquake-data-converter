@@ -96,9 +96,11 @@ export const shindoLayer: LayerModule = {
   },
 
   popupHtml(p, lng, lat) {
+    // 計測震度の '//' は「値なし」を表す気象庁の記号。そのまま出しても読めない。
+    const measured = prop(p, '震度（計測値）')
     const rows =
       row('震度', prop(p, '震度'), true) +
-      row('計測震度', prop(p, '震度（計測値）')) +
+      row('計測震度', measured === '//' ? '' : measured) +
       row('発現時刻', prop(p, 'DateTime')) +
       row('観測点番号', prop(p, '観測点番号')) +
       row('地震ID', prop(p, '地震ID'))
