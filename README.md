@@ -95,6 +95,8 @@ tippecanoe -zg -B7 -rg -o shindo_convert.pmtiles -r1 -d8 -pf -pk shindo_convert.
 ## デモサイト
 - MapLibre GL JSで構築
 - https://shiwaku.github.io/jma-earthquake-data-converter/
+- 上記URLでは下記の[ビューワ（viewer/）](#ビューワviewer)を公開しています。`.github/workflows/deploy-pages.yml` が `viewer/` の更新のたびにビルドして反映します。
+- 作り直す前のビューワ（リポジトリ直下の `index.html`）は https://shiwaku.github.io/jma-earthquake-data-converter/legacy/ に残しています。
 - サンプル画像
 ![image](https://github.com/shi-works/jma-earthquake-data-converter/assets/71203808/1c06cc86-f8a3-48ca-8971-1de10550a864)
 ### 使用データ
