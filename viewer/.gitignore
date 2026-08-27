@@ -1,0 +1,6 @@
+node_modules/
+dist/
+.env
+.env.*
+# 設定例は配布物として残す
+!.env.example

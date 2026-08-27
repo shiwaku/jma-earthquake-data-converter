@@ -1,0 +1,35 @@
+import './style.css'
+
+import { createDataLayers } from './map/dataLayers'
+import { createEventCamera } from './map/eventCamera'
+import { createMap } from './map/createMap'
+import { createAppStore } from './state'
+import { createBasemapSwitch } from './ui/basemapSwitch'
+import { createDatasetInfo } from './ui/datasetInfo'
+import { createEventSearch } from './ui/eventSearch'
+import { createLayerPanel } from './ui/layerPanel'
+import { createPanel } from './ui/panel'
+import { createThemeToggle } from './ui/themeToggle'
+
+// 地図の位置はMapLibreの hash が握る。createMap を通すと即座に書き込まれるため、
+// 「利用者がURLで位置を指定して来たか」はその前に見ておく必要がある。
+const hasInitialHash = window.location.hash.length > 1
+
+// 状態はstoreに1本化する。UIも地図もこれを購読するだけで、互いを直接書き換えない。
+const store = createAppStore()
+const map = createMap('map', store.get())
+
+createDataLayers(map, store)
+createEventCamera(map, store, hasInitialHash)
+createBasemapSwitch(map, store)
+createThemeToggle(store)
+createPanel()
+createEventSearch(store)
+createLayerPanel(store)
+createDatasetInfo()
+
+const buildEl = document.getElementById('build-ver')
+if (buildEl) buildEl.textContent = __BUILD_TIME__
+
+// デバッグ用
+Object.assign(window, { __map: map, __store: store })

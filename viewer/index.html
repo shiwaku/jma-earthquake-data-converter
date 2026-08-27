@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
+  <title>気象庁 震度マップ</title>
+  <meta name="description" content="気象庁 地震月報(カタログ編) の震源データ・震度データ（1919年〜）を PMTiles で表示するビューワ" />
+  <meta name="theme-color" content="#2a78d6" />
+  <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
+</head>
+<body>
+  <div id="map"></div>
+
+  <section id="panel" class="panel" aria-label="コントロールパネル">
+    <header class="panel-head">
+      <div class="brand">
+        <span class="brand-mark" aria-hidden="true">🌏</span>
+        <h1>気象庁 震度マップ<br /><span class="brand-sub">1919年〜2022年</span></h1>
+      </div>
+      <div class="head-actions">
+        <button id="theme-btn" class="icon-btn" type="button" title="テーマ切替" aria-label="テーマ切替"></button>
+        <button id="collapse-btn" class="icon-btn" type="button" title="パネル開閉" aria-label="パネル開閉"></button>
+      </div>
+    </header>
+
+    <div id="panel-body" class="panel-body">
+      <div class="field">
+        <div class="field-head">
+          <span class="field-label">地震</span>
+        </div>
+        <div class="event-search">
+          <input id="event-q" type="search" class="event-q" autocomplete="off"
+            placeholder="震央地名・年月日・M・震度で検索" aria-label="地震を検索" />
+          <div id="event-current" class="event-current" aria-live="polite" hidden></div>
+          <p id="event-status" class="event-status" role="status"></p>
+          <ul id="event-list" class="event-list"></ul>
+        </div>
+      </div>
+
+      <div class="field">
+        <div class="field-head">
+          <span class="field-label">レイヤー</span>
+        </div>
+        <div id="layers" class="toggles"></div>
+      </div>
+
+      <div class="field">
+        <div class="field-head">
+          <span class="field-label">収録データ</span>
+        </div>
+        <dl id="dataset-info" class="dataset-info"></dl>
+      </div>
+    </div>
+
+    <footer class="panel-foot">
+      震度データ・震源データ: <a href="https://www.data.jma.go.jp/eqev/data/bulletin/shindo.html" target="_blank" rel="noopener">気象庁 地震月報(カタログ編)</a><br />
+      人口集中地区: <a href="https://www.e-stat.go.jp/gis" target="_blank" rel="noopener">政府統計の総合窓口（e-Stat）</a><br />
+      背景: 国土地理院 最適化ベクトルタイル / 全国最新写真<br />
+      <a href="https://github.com/shiwaku/jma-earthquake-data-converter" target="_blank" rel="noopener">GitHub</a>
+      <span id="build-ver" class="build-ver"></span>
+    </footer>
+  </section>
+
+  <script type="module" src="/src/main.ts"></script>
+</body>
+</html>

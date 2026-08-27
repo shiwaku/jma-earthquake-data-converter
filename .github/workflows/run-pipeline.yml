@@ -1,0 +1,163 @@
+name: 変換パイプライン
+
+on:
+  workflow_dispatch:
+    inputs:
+      start_year:
+        description: '取得開始年'
+        required: true
+        default: '1919'
+      end_year:
+        description: '取得終了年（空なら配信されている最新年）'
+        required: false
+        default: ''
+      publish_release:
+        description: '成果物をReleasesに公開する'
+        type: boolean
+        default: true
+
+env:
+  TIPPECANOE_VERSION: '2.79.0'
+
+permissions:
+  contents: write
+
+jobs:
+  convert:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - run: pip install requests pandas geopandas pyarrow
+
+      - name: tippecanoeをキャッシュから復元
+        id: tippecanoe-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.local/bin/tippecanoe
+          key: tippecanoe-${{ env.TIPPECANOE_VERSION }}-${{ runner.os }}
+
+      - name: tippecanoeをビルド
+        if: steps.tippecanoe-cache.outputs.cache-hit != 'true'
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends build-essential libsqlite3-dev zlib1g-dev
+          git clone --depth 1 --branch "$TIPPECANOE_VERSION" https://github.com/felt/tippecanoe.git /tmp/tippecanoe
+          make -C /tmp/tippecanoe -j"$(nproc)"
+          mkdir -p ~/.local/bin
+          cp /tmp/tippecanoe/tippecanoe ~/.local/bin/
+
+      - name: tippecanoeをPATHに追加
+        run: |
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+          chmod +x ~/.local/bin/tippecanoe
+
+      - name: 作業ディレクトリを用意
+        run: mkdir -p work
+
+      - name: 震度データを取得
+        working-directory: work
+        env:
+          START_YEAR: ${{ inputs.start_year }}
+          END_YEAR: ${{ inputs.end_year }}
+        run: |
+          if [ -n "$END_YEAR" ]; then
+            python ../src/shindo_zip_dl.py --start "$START_YEAR" --end "$END_YEAR"
+          else
+            python ../src/shindo_zip_dl.py --start "$START_YEAR"
+          fi
+
+      - name: zipを展開
+        working-directory: work
+        run: |
+          mkdir -p dat
+          unzip -o -q 'zip/i*.zip' -d dat
+          unzip -o -q zip/code_p.zip -d .
+          echo "展開: $(ls dat | wc -l)ファイル"
+
+      - name: 観測点一覧を変換
+        working-directory: work
+        run: python ../src/code_p2csv.py
+
+      - name: 震源データ・震度データを抽出
+        working-directory: work
+        run: python ../src/dat_converter.py
+
+      - name: 震源データを変換
+        working-directory: work
+        run: python ../src/hypocenter_converter.py
+
+      - name: 震度データを変換
+        working-directory: work
+        run: python ../src/shindo_converter.py
+
+      # ogr2ogrのParquetドライバはUbuntuのgdal-binに含まれない場合があるためgeopandasを使う
+      - name: GeoParquetへ変換
+        working-directory: work
+        run: |
+          python ../src/csv2geoparquet.py hypocenter_convert.csv hypocenter_convert.parquet --lon Longitude --lat Latitude
+          python ../src/csv2geoparquet.py shindo_convert.csv shindo_convert.parquet --lon 観測点経度 --lat 観測点緯度
+
+      # tippecanoeの入力にする。地震IDは文字列のまま出す必要がある（ビューワが文字列で比較するため）
+      - name: 行区切りGeoJSONへ変換
+        working-directory: work
+        run: |
+          python ../src/csv2geojsonseq.py hypocenter_convert.csv hypocenter_convert.geojsonl --lon Longitude --lat Latitude --number '深さ(km)' --number マグニチュード1 --number マグニチュード2 --number 観測点数 --number UnixTime
+          python ../src/csv2geojsonseq.py shindo_convert.csv shindo_convert.geojsonl --lon 観測点経度 --lat 観測点緯度 --number '震度（計測値）'
+
+      # -l でレイヤー名を明示する。ビューワの source-layer と一致させる必要がある
+      - name: PMTilesへ変換
+        working-directory: work
+        run: |
+          set -euo pipefail
+          tippecanoe -zg -o hypocenter_convert.pmtiles -l hypocenter_convert -r1 -pf -pk -P --force hypocenter_convert.geojsonl
+          tippecanoe -zg -B7 -rg -o shindo_convert.pmtiles -l shindo_convert -r1 -d8 -pf -pk -P --force shindo_convert.geojsonl
+
+      - name: 成果物を確認
+        working-directory: work
+        run: |
+          ls -lh hypocenter_convert.csv shindo_convert.csv hypocenter_convert.parquet shindo_convert.parquet hypocenter_convert.pmtiles shindo_convert.pmtiles
+          python - <<'PY'
+          import csv
+          import sys
+          for path in ('hypocenter_convert.csv', 'shindo_convert.csv'):
+              with open(path, encoding='utf-8', newline='') as file:
+                  rows = sum(1 for _ in csv.DictReader(file))
+              print(f'{path}: {rows}行')
+              if rows == 0:
+                  sys.exit(f'{path} が空です')
+          PY
+
+      - name: 観測点一覧とマニフェストを更新
+        run: |
+          cp work/code_p.dat data/code_p.dat
+          cp work/code_p.csv data/code_p.csv
+          # 差分ありの場合に終了コード1を返すため、ここでは失敗扱いにしない
+          python src/check_updates.py --update || true
+          if ! git diff --quiet; then
+            git config user.name 'github-actions[bot]'
+            git config user.email 'github-actions[bot]@users.noreply.github.com'
+            git add data/
+            git commit -m 'chore(data): 観測点一覧とマニフェストを更新'
+            git push
+          else
+            echo '更新なし'
+          fi
+
+      - name: Releasesに公開
+        if: inputs.publish_release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          tag="data-$(date -u '+%Y%m%d')"
+          if ! gh release view "$tag" >/dev/null 2>&1; then
+            gh release create "$tag" --title "変換済みデータ ${tag}" --notes "気象庁 地震月報(カタログ編) 震度データの変換結果。生成: $(date -u '+%Y-%m-%d %H:%M UTC')"
+          fi
+          gh release upload "$tag" --clobber work/hypocenter_convert.csv work/shindo_convert.csv work/hypocenter_convert.parquet work/shindo_convert.parquet work/hypocenter_convert.pmtiles work/shindo_convert.pmtiles

@@ -1,6 +1,6 @@
 # jma-earthquake-data-converter
 ## プログラムについて
-- 本プログラムは、気象庁が公開している、[地震月報(カタログ編)の震度データ（1919～2021年）及び震度観測点一覧](https://www.data.jma.go.jp/eqev/data/bulletin/shindo.html)を読みやすい形式（GISデータ）に変換するプログラムです。
+- 本プログラムは、気象庁が公開している、[地震月報(カタログ編)の震度データ（1919～2022年）及び震度観測点一覧](https://www.data.jma.go.jp/eqev/data/bulletin/shindo.html)を読みやすい形式（GISデータ）に変換するプログラムです。
 - オープンソースソフトウェアで構築
 
 ## データの入手
@@ -8,6 +8,7 @@
 - https://www.data.jma.go.jp/eqev/data/bulletin/shindo.html
 - なお、一括で震度データ（zip形式）をダウンロードするPythonスクリプトは以下にあります。
 - https://github.com/shiwaku/jma-earthquake-data-converter/blob/main/src/shindo_zip_dl.py
+- 配信ページから最新の年を読み取るため、年の指定は不要です（`--start` / `--end` で範囲を絞ることもできます）。
 
 ## 震度観測点一覧を読みやすい形式へ変換（code_p2csv.py）
 - 震度観測点一覧（datファイル）を読みやすい形式（csvファイル）に変換するプログラムです。
@@ -55,6 +56,11 @@
 ogr2ogr -f "Parquet" hypocenter_convert.parquet hypocenter_convert.csv -oo X_POSSIBLE_NAMES=Longitude -oo Y_POSSIBLE_NAMES=Latitude -s_srs EPSG:4326 -t_srs EPSG:4326
 ogr2ogr -f "Parquet" shindo_convert.parquet shindo_convert.csv -oo X_POSSIBLE_NAMES=観測点経度 -oo Y_POSSIBLE_NAMES=観測点緯度 -s_srs EPSG:4326 -t_srs EPSG:4326
 ```
+- GDALのビルドによってはParquetドライバが含まれないため、geopandasで変換する `src/csv2geoparquet.py` も用意しています（GitHub Actionsではこちらを使用）。
+```
+python src/csv2geoparquet.py hypocenter_convert.csv hypocenter_convert.parquet --lon Longitude --lat Latitude
+python src/csv2geoparquet.py shindo_convert.csv shindo_convert.parquet --lon 観測点経度 --lat 観測点緯度
+```
 ### 使用データ
 #### 震源データ
 [https://xs489works.xsrv.jp/pmtiles-data/jma-earthquake/hypocenter_convert.csv](https://xs489works.xsrv.jp/pmtiles-data/jma-earthquake/hypocenter_convert.csv),20MB
@@ -68,6 +74,11 @@ ogr2ogr -f "Parquet" shindo_convert.parquet shindo_convert.csv -oo X_POSSIBLE_NA
 
 ## 震源データ及び震度データをPMTiles形式へ変換
 震源データ及び震度データの[PMTiles形式](https://github.com/protomaps/PMTiles)への変換には[feltのtippecanoe](https://github.com/felt/tippecanoe)を使用しています。
+- tippecanoeへの入力となる行区切りGeoJSONは `src/csv2geojsonseq.py` で作成します。地震IDはビューワが文字列で比較するため、数値化せず文字列のまま出力します。
+```
+python src/csv2geojsonseq.py hypocenter_convert.csv hypocenter_convert.geojsonl --lon Longitude --lat Latitude
+python src/csv2geojsonseq.py shindo_convert.csv shindo_convert.geojsonl --lon 観測点経度 --lat 観測点緯度
+```
 ```
 tippecanoe -zg -o hypocenter_convert.pmtiles -r1 -pf -pk hypocenter_convert.geojson
 tippecanoe -zg -B7 -rg -o shindo_convert.pmtiles -r1 -d8 -pf -pk shindo_convert.geojson
@@ -93,6 +104,26 @@ tippecanoe -zg -B7 -rg -o shindo_convert.pmtiles -r1 -d8 -pf -pk shindo_convert.
 `https://xs489works.xsrv.jp/pmtiles-data/jma-earthquake/shindo_convert.pmtiles`,150MB
 #### 人口集中地区（2020年）
 `https://xs489works.xsrv.jp/pmtiles-data/r2DID/2020_did_ddsw_01-47_JGD2011.pmtiles`,12.7MB
+
+## ビューワ（viewer/）
+- 上記デモサイト（`index.html`）を作り直したものです。Vite + TypeScript + MapLibre GL JS 6。
+- 旧デモサイトは表示できる地震が14件の固定プルダウンでしたが、こちらは**最大震度3以上の15,480件**から震央地名・年月日・マグニチュード・震度で検索できます。
+- 検索の索引は `src/build_event_index.py` が震源CSV・震度CSVから `viewer/public/events.json` を生成します。
+```
+python src/build_event_index.py hypocenter_convert.csv viewer/public/events.json --shindo-csv shindo_convert.csv
+```
+- 索引には地震ごとの表示範囲（強く揺れた観測点の外接矩形＋震源）を持たせており、選んだ地震にそのままカメラが寄ります。
+- 起動
+```
+cd viewer
+npm ci
+npm run dev
+```
+- PMTilesの配置場所は `viewer/.env` の `VITE_PMTILES_BASE` で切り替えられます（既定は外部ホスティング）。
+
+## 自動化（GitHub Actions）
+- `.github/workflows/check-jma-updates.yml` … 毎月1日に気象庁の配信状況を `data/jma_manifest.json` と照合し、差分があればIssueに起票します。検知のみで、変換は行いません。
+- `.github/workflows/run-pipeline.yml` … 手動実行。ダウンロードから変換・GeoParquet・PMTiles生成までを行い、成果物をReleasesへ公開します（`shindo_convert.csv` は200MB超のためGitHubのファイル上限を超えます）。
 
 ## データ使用上の注意
 - データを使用するにあたり、下記のデータフォーマットや気象庁の地震カタログの解説を必ずご確認ください。

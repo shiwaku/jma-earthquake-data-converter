@@ -1,0 +1,66 @@
+name: 気象庁データ更新チェック
+
+on:
+  schedule:
+    # 毎月1日 09:00 JST (00:00 UTC)
+    - cron: '0 0 1 * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - run: pip install requests
+
+      - name: 配信状況をマニフェストと照合
+        id: check
+        run: |
+          set +e
+          python src/check_updates.py
+          code=$?
+          set -e
+          # 0:差分なし 1:差分あり はどちらも正常。2 は照合失敗
+          if [ "$code" -ge 2 ]; then
+            echo "::error::配信状況の照合に失敗しました（ネットワークまたは配信ページの構造変更）"
+            exit 1
+          fi
+
+      - name: 差分をIssueに反映
+        if: steps.check.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          {
+            echo '気象庁の震度データ配信内容に変更を検知しました。'
+            echo
+            cat jma_update_report.md
+            echo
+            echo '---'
+            echo
+            echo '取り込む場合は「変換パイプライン」ワークフローを手動実行してください。'
+            echo "検知日時: $(date -u '+%Y-%m-%d %H:%M UTC')"
+            echo "実行ログ: ${RUN_URL}"
+          } > issue_body.md
+
+          # 同一Issueを使い回して毎月の重複起票を防ぐ
+          gh label create jma-update --description '気象庁データの更新検知' --color FBCA04 2>/dev/null || true
+          existing=$(gh issue list --label jma-update --state open --json number --jq '.[0].number // empty')
+          if [ -n "$existing" ]; then
+            gh issue comment "$existing" --body-file issue_body.md
+            echo "既存Issue #${existing} にコメントしました"
+          else
+            gh issue create --title '気象庁の震度データが更新されました' \
+              --label jma-update --body-file issue_body.md
+          fi
