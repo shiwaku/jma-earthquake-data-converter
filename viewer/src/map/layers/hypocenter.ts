@@ -1,5 +1,6 @@
 import type { FilterSpecification, LayerSpecification } from 'maplibre-gl'
 import { GLYPH_FONT } from '../basemap'
+import { pmtilesUrl } from '../../lib/pmtiles'
 import { coordFooter, esc, prop, row } from '../../lib/format'
 import type { LayerModule, PaintContext, RenderContext } from './types'
 
@@ -17,7 +18,7 @@ export const hypocenterLayer: LayerModule = {
   def: {
     key: KEY,
     name: '震源',
-    url: 'https://xs489works.xsrv.jp/pmtiles-data/jma-earthquake/hypocenter_convert.pmtiles',
+    url: pmtilesUrl('jma-earthquake/hypocenter_convert.pmtiles'),
     sourceLayer: 'hypocenter_convert',
     defaultVisible: true,
     defaultOpacity: 1,

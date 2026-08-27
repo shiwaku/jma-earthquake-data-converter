@@ -1,5 +1,6 @@
 import type { FilterSpecification, LayerSpecification } from 'maplibre-gl'
 import { GLYPH_FONT } from '../basemap'
+import { pmtilesUrl } from '../../lib/pmtiles'
 import { coordFooter, esc, prop, row } from '../../lib/format'
 import { SHINDO_CLASSES, shindoColorExpression } from './shindoScale'
 import type { LayerModule, PaintContext, RenderContext } from './types'
@@ -17,7 +18,7 @@ export const shindoLayer: LayerModule = {
   def: {
     key: KEY,
     name: '震度',
-    url: 'https://xs489works.xsrv.jp/pmtiles-data/jma-earthquake/shindo_convert.pmtiles',
+    url: pmtilesUrl('jma-earthquake/shindo_convert.pmtiles'),
     sourceLayer: 'shindo_convert',
     defaultVisible: true,
     defaultOpacity: 1,

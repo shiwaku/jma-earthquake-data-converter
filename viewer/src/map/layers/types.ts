@@ -7,7 +7,7 @@ export interface LayerDef {
   key: string
   /** 表示名（日本語） */
   name: string
-  /** PMTiles のURL。VITE_PMTILES_BASE からの相対名ではなく完全なURLを持つ。 */
+  /** PMTiles のURL。配信元は環境で変わるため pmtilesUrl() で組み立てる。 */
   url: string
   /** ベクトルタイル内のレイヤー名 */
   sourceLayer: string

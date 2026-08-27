@@ -1,5 +1,6 @@
 import type { LayerSpecification } from 'maplibre-gl'
 import { coordFooter, esc, prop, row } from '../../lib/format'
+import { pmtilesUrl } from '../../lib/pmtiles'
 import type { LayerModule, PaintContext } from './types'
 
 const KEY = 'did'
@@ -20,7 +21,7 @@ export const didLayer: LayerModule = {
   def: {
     key: KEY,
     name: '人口集中地区（2020年）',
-    url: 'https://xs489works.xsrv.jp/pmtiles-data/r2DID/2020_did_ddsw_01-47_JGD2011.pmtiles',
+    url: pmtilesUrl('r2DID/2020_did_ddsw_01-47_JGD2011.pmtiles'),
     sourceLayer: '2020_did_ddsw_0147_JGD2011fgb',
     defaultVisible: true,
     defaultOpacity: 0.3,
