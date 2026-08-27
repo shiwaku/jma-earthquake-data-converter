@@ -34,6 +34,9 @@ export function createMap(container: string, state: AppState): MapLibreMap {
     style: getBasemapStyle(state.basemap, state.theme),
     center: [138.5, 37.5],
     zoom: 4.5,
+    // 既定の上限は60。震源の深さを断面のように見るには浅すぎるので上げる。
+    // maplibre は 60 超を experimental としているが、地形を使っていないので影響は小さい。
+    maxPitch: 85,
     hash: true,
     attributionControl: false,
     // モバイルのGPU・メモリ逼迫対策

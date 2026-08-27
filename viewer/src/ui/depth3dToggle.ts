@@ -8,8 +8,11 @@ import type { AppStore } from '../state'
  *
  * 立体にする以上カメラを傾けないと何も分からないため、ONで pitch を倒す。
  * OFFでは真上に戻す。利用者が手で傾けた角度は覚えず、モードに紐づける。
+ *
+ * 85度はほぼ水平で、スラブの潜り込みを断面のように見られる。地図の既定上限は
+ * 60のため、createMap 側で maxPitch を上げてある。
  */
-const PITCH_ON = 60
+const PITCH_ON = 85
 
 export function createDepth3dToggle(map: MapLibreMap, store: AppStore): void {
   const btn = document.getElementById('depth3d-btn') as HTMLButtonElement | null
