@@ -74,6 +74,13 @@ export function createDataLayers(map: MapLibreMap, store: AppStore): void {
 
   /** 有効なレイヤーのみを（正規 z順で）地図に載せる。無効なものはソースごと持たない＝軽量。 */
   function sync(): void {
+    // 背景を差し替えている最中はスタイルが入れ替わっており、ソースを足せない
+    // （addSource が "Style is not done loading" で落ちる）。落ち着いてからやり直す。
+    // 背景を切り替えた直後にレイヤーを触ると通る道。
+    if (!map.isStyleLoaded()) {
+      map.once('idle', sync)
+      return
+    }
     const state = store.get()
     for (const mod of LAYERS) {
       if (state.layers[mod.def.key].visible) ensureLayer(mod)

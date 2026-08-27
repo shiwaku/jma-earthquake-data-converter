@@ -60,7 +60,10 @@ export function createMap(container: string, state: AppState): MapLibreMap {
     // 既定の上限は60。震源の深さを断面のように見るには浅すぎるので上げる。
     // maplibre は 60 超を experimental としているが、地形を使っていないので影響は小さい。
     maxPitch: 85,
-    hash: true,
+    // 位置は `#map=z/lat/lng/bearing/pitch` として書く。名前を付けておくと
+    // MapLibre が自分のキーだけ差し替えるようになり、テーマなど自前の状態を
+    // 同じハッシュに同居させられる（lib/urlState.ts）。
+    hash: 'map',
     attributionControl: false,
     // モバイルのGPU・メモリ逼迫対策
     maxTileCacheSize: isMobile ? 24 : undefined,
