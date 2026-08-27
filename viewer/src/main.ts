@@ -4,6 +4,7 @@
 import 'maplibre-gl/dist/maplibre-gl.css'
 import './style.css'
 
+import { createBasemapDim } from './map/basemapDim'
 import { createDataLayers } from './map/dataLayers'
 import { createEventCamera } from './map/eventCamera'
 import { createHypocenter3d } from './map/hypocenter3d'
@@ -31,6 +32,7 @@ createDataLayers(map, store)
 createEventCamera(map, store, hasInitialHash)
 createInteractions(map, store)
 createHypocenter3d(map, store)
+createBasemapDim(map, store)
 createPopup(map, store)
 createBasemapSwitch(map, store)
 createThemeToggle(store)
