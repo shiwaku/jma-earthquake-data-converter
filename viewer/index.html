@@ -6,10 +6,14 @@
   <title>気象庁 震源マップ</title>
   <meta name="description" content="気象庁 地震月報(カタログ編) の震源データ（1919〜2023年・約508万件）を深さ方向に配置して立体表示するビューワ" />
   <meta name="theme-color" content="#2a78d6" />
-  <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
+  <link rel="icon" href="./icon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="./icon-192.png" />
+  <link rel="manifest" href="./manifest.webmanifest" />
 </head>
 <body>
   <div id="map"></div>
+
+  <div id="toast" role="status" aria-live="polite"></div>
 
   <section id="panel" class="panel" aria-label="コントロールパネル">
     <header class="panel-head">
@@ -18,6 +22,7 @@
         <h1>気象庁 震源マップ<br /><span class="brand-sub">1919年〜2023年</span></h1>
       </div>
       <div class="head-actions">
+        <button id="share-btn" class="icon-btn" type="button" title="この画面のURLをコピー" aria-label="この画面のURLをコピー">🔗</button>
         <button id="theme-btn" class="icon-btn" type="button" title="テーマ切替" aria-label="テーマ切替"></button>
         <button id="collapse-btn" class="icon-btn" type="button" title="パネル開閉" aria-label="パネル開閉"></button>
       </div>
