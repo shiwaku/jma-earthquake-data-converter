@@ -33,6 +33,14 @@
 
       <div class="field">
         <div class="field-head">
+          <span class="field-label">震源の深さ</span>
+          <button id="depth3d-btn" class="mini-btn" type="button" aria-pressed="false">深さ3D</button>
+        </div>
+        <p class="depth3d-note">1919年以降の全震源（214,763件）を深さ方向に配置します。地図を傾けると立体に見えます。</p>
+      </div>
+
+      <div class="field">
+        <div class="field-head">
           <span class="field-label">収録データ</span>
         </div>
         <dl id="dataset-info" class="dataset-info"></dl>
@@ -47,6 +55,12 @@
       <span id="build-ver" class="build-ver"></span>
     </footer>
   </section>
+
+  <!-- 深さの凡例。パネルを畳んでも読めるよう地図上に出す（参考実装と同じ置き方）。 -->
+  <div id="depth3d-legend" class="depth-legend" aria-hidden="true" hidden>
+    <div class="dl-bar"></div>
+    <div class="dl-ticks"></div>
+  </div>
 
   <!-- 地震の選択はパネルの外に常設する。パネルを畳んでも切り替えられるようにするため
        （スマホではパネルが初期状態で畳まれる）。 -->
