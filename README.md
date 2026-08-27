@@ -77,17 +77,31 @@ python src/hypo_dat_converter.py work/hypo work/hypocenter_catalog.csv
 
 `h*.zip` を置いたディレクトリを渡すと、96B固定長のJ形式を解いてCSVにします。出力の列名は `hypocenter_convert.csv` に揃えてあります。最大震度が空欄の行が無感地震です。
 
-タイルは件数が桁違いなので、間引きと一括変換が要ります。
+タイルは件数が桁違いなので、間引きと一括変換が要ります。CSVからタイルまで1本で通せます。
 
+```bash
+bash src/build_unfelt_mlt_tiles.sh work/hypocenter_catalog.csv work/mlt-unfelt
 ```
+
+中でやっていること:
+
+```bash
+# 1. 無感のみ・5列に絞ってGeoJSONSeqへ
+python3 src/csv2geojsonseq.py work/hypocenter_catalog.csv work/mlt-unfelt/unfelt.geojson   --lon Longitude --lat Latitude --where-empty 最大震度   --keep 地震ID --keep DateTime --keep 震央地名 --keep '深さ(km)' --keep 'マグニチュード1'   --float '深さ(km)' --float 'マグニチュード1'   --rename '深さ(km)=深さ' --rename 'マグニチュード1=マグニチュード'
+
+# 2〜4.
 tippecanoe --no-tile-compression -Z0 -z10 -l unfelt --drop-densest-as-needed -o unfelt.mbtiles unfelt.geojson
 java -jar encode.jar --mbtiles unfelt.mbtiles --dir mlt
 python src/explode_mbtiles.py mlt/unfelt.mlt.mbtiles -o tiles --ext mlt
 ```
 
+- **`最大震度` が空の行が無感地震です**。カタログ5,077,137件のうち4,938,455件がこれにあたります
+- **属性は5つに絞ります**。`地震ID` `DateTime` `震央地名` `深さ` `マグニチュード`。全13列を載せるとタイルが太るうえ、無感の行では最大震度・観測点数・震源決定フラグに見せるものがありません
+- **列名を短くします**。`深さ(km)` → `深さ`、`マグニチュード1` → `マグニチュード`。ビューワはどちらの名前でも読みますが（`viewer/src/map/layers/unfelt.ts`）、配信中のタイルはこの短いほうです
 - **低ズームは間引きます**。有感（21万点）と違い、間引かないと1タイルが数百MBになります。最大ズーム10で全点が入ります
 - **`encode.jar` は `--mbtiles` で一括変換します**。タイルごとに起動するとJVMの立ち上げが17,833回になり数時間かかります
 - 出力もmbtilesなので `explode_mbtiles.py` でXYZに開きます（MapLibreはHTTP越しにmbtilesを読めないため）
+- **レイヤー名は `unfelt`**。ビューワの `sourceLayer` と一致させる必要があります
 
 結果は **17,833枚・134MB（最大275KB）**。MVT 289MB に対し MLT 138MB で **47.8%**（52.2%削減）でした。点数が多いほどMLTが効きます（21万点では66.4%）。
 
@@ -110,8 +124,9 @@ flowchart LR
   SHINDO --> GP
   HYPO --> PM["PMTiles<br/>csv2geojsonseq.py → tippecanoe"]
   SHINDO --> PM
-  HYPO --> MLT["MLT<br/>build_mlt_tiles.sh"]
-  CAT --> MLT
+  HYPO --> MLT["MLT 有感<br/>build_mlt_tiles.sh"]
+  CAT --> MLTU["MLT 無感<br/>build_unfelt_mlt_tiles.sh"]
+  MLTU --> VIEWER
   PM --> VIEWER["ビューワ<br/>viewer/"]
   MLT --> VIEWER
 ```
