@@ -1,3 +1,7 @@
+// MapLibre本体のCSSを先に読む。後に来ると .maplibregl-popup-content の
+// background:#fff などが同じ詳細度で自前の上書きに勝ってしまい、
+// ダークテーマのポップアップが白背景＋白文字になって読めなくなる。
+import 'maplibre-gl/dist/maplibre-gl.css'
 import './style.css'
 
 import { createDataLayers } from './map/dataLayers'

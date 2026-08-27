@@ -15,7 +15,6 @@ import {
 // ?worker&url でVite側にワーカーを別チャンクとして吐かせ、そのURLを渡して回避する。
 import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url'
 import { Protocol } from 'pmtiles'
-import 'maplibre-gl/dist/maplibre-gl.css'
 
 import { isMobile } from '../lib/env'
 import type { AppState } from '../state'
