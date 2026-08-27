@@ -6,12 +6,6 @@
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 [![Data: CC BY 4.0](https://img.shields.io/badge/data-CC%20BY%204.0-green)](#ライセンス)
 
-**[▶ デモサイトを開く](https://shiwaku.github.io/jma-earthquake-data-converter/)**
-
-<video src="https://github.com/shiwaku/jma-earthquake-data-converter/raw/main/docs/demo.mp4" controls muted loop width="100%"></video>
-
-<sub>震源を深さ方向に配置した立体表示。色は深さを表す（浅いほど暖色）</sub>
-
 ## 収録データ
 
 | | 件数 | 期間 |
