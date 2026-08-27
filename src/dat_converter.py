@@ -111,35 +111,8 @@ with open(output_file, 'w', encoding='shift_jis', newline='') as csvfile,\
                                 unmatched_line_bytes = lines[line_idx]
 
                                 # 震源レコードの１番上のレコードが代表値（採用値）以外は読み飛ばし
-                                if unmatched_line_bytes.startswith(b'A') or unmatched_line_bytes.startswith(b'B') or unmatched_line_bytes.startswith(b'D'):
-                                    line_idx += 1
-                                    unmatched_line_bytes = lines[line_idx]
-
-                                if unmatched_line_bytes.startswith(b'A') or unmatched_line_bytes.startswith(b'B') or unmatched_line_bytes.startswith(b'D'):
-                                    line_idx += 1
-                                    unmatched_line_bytes = lines[line_idx]
-
-                                if unmatched_line_bytes.startswith(b'A') or unmatched_line_bytes.startswith(b'B') or unmatched_line_bytes.startswith(b'D'):
-                                    line_idx += 1
-                                    unmatched_line_bytes = lines[line_idx]
-
-                                if unmatched_line_bytes.startswith(b'A') or unmatched_line_bytes.startswith(b'B') or unmatched_line_bytes.startswith(b'D'):
-                                    line_idx += 1
-                                    unmatched_line_bytes = lines[line_idx]
-
-                                if unmatched_line_bytes.startswith(b'A') or unmatched_line_bytes.startswith(b'B') or unmatched_line_bytes.startswith(b'D'):
-                                    line_idx += 1
-                                    unmatched_line_bytes = lines[line_idx]
-
-                                if unmatched_line_bytes.startswith(b'A') or unmatched_line_bytes.startswith(b'B') or unmatched_line_bytes.startswith(b'D'):
-                                    line_idx += 1
-                                    unmatched_line_bytes = lines[line_idx]
-
-                                if unmatched_line_bytes.startswith(b'A') or unmatched_line_bytes.startswith(b'B') or unmatched_line_bytes.startswith(b'D'):
-                                    line_idx += 1
-                                    unmatched_line_bytes = lines[line_idx]
-
-                                if unmatched_line_bytes.startswith(b'A') or unmatched_line_bytes.startswith(b'B') or unmatched_line_bytes.startswith(b'D'):
+                                # 群発地震では震源レコードが何レコードでも連続しうる
+                                while unmatched_line_bytes[:1] in (b'A', b'B', b'D') and line_idx + 1 < len(lines):
                                     line_idx += 1
                                     unmatched_line_bytes = lines[line_idx]
 
