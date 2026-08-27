@@ -20,8 +20,15 @@ import type { AppStore } from '../state'
  * 震源レイヤーを非表示にするとソースごと外れるため、3Dの点群も消える。
  */
 
-const SOURCE_ID = 'hypocenter'
-const SOURCE_LAYER = 'hypocenter'
+/**
+ * 立体表示に使うソース。有感（震度データ由来）と無感（震源データ由来）の両方を読む。
+ * 沈み込み帯の形をつくるのは無感のほうで、有感だけでは点が疎で帯にならない。
+ * どちらもレイヤーを非表示にするとソースごと外れ、点群からも消える。
+ */
+const SOURCES: [string, string][] = [
+  ['hypocenter', 'hypocenter'],
+  ['unfelt', 'unfelt'],
+]
 
 /**
  * 深さ→色の対応。参考実装（japan-eq-locator）と同じ Spectral 系の並びだが、
@@ -93,7 +100,10 @@ export function createHypocenter3d(map: MapLibreMap, store: AppStore): void {
     pending = false
     if (!store.get().depth3d) return
     let added = false
-    for (const f of map.querySourceFeatures(SOURCE_ID, { sourceLayer: SOURCE_LAYER })) {
+    const features = SOURCES.flatMap(([source, sourceLayer]) =>
+      map.getSource(source) ? map.querySourceFeatures(source, { sourceLayer }) : [],
+    )
+    for (const f of features) {
       const p = f.properties ?? {}
       const g = f.geometry
       if (g?.type !== 'Point') continue
@@ -158,7 +168,8 @@ export function createHypocenter3d(map: MapLibreMap, store: AppStore): void {
   }
 
   function onSourceData(e: { sourceId?: string; sourceDataType?: string }): void {
-    if (e.sourceId !== SOURCE_ID || e.sourceDataType === 'metadata') return
+    if (e.sourceDataType === 'metadata') return
+    if (!SOURCES.some(([id]) => id === e.sourceId)) return
     schedule()
   }
 
