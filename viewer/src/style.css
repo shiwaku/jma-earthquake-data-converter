@@ -1,0 +1,1087 @@
+:root {
+  --surface: rgba(255, 255, 255, 0.82);
+  --surface-solid: #ffffff;
+  --ink: #14161a;
+  --ink-2: #5a6069;
+  --ink-3: #8b919b;
+  --line: rgba(20, 22, 26, 0.1);
+  --line-2: rgba(20, 22, 26, 0.16);
+  --accent: #2a78d6;
+  --accent-ink: #ffffff;
+  --track: rgba(20, 22, 26, 0.14);
+  --hover: rgba(20, 22, 26, 0.05);
+  --shadow: 0 10px 30px -10px rgba(16, 24, 40, 0.35), 0 2px 8px -4px rgba(16, 24, 40, 0.2);
+  --radius: 16px;
+  --radius-sm: 10px;
+  /* 下端の常設タイムバーの高さ。地図コントロールをこの分だけ持ち上げる。
+     このビューワはタイムバーを持たないため0。持たせるときにここを戻す。 */
+  --timebar-h: 0px;
+  color-scheme: light;
+}
+
+:root[data-theme='dark'] {
+  --surface: rgba(24, 26, 30, 0.78);
+  --surface-solid: #1b1e24;
+  --ink: #f2f4f7;
+  --ink-2: #b3b9c4;
+  --ink-3: #7d838e;
+  --line: rgba(255, 255, 255, 0.1);
+  --line-2: rgba(255, 255, 255, 0.16);
+  --accent: #4f97f0;
+  --accent-ink: #0a0c10;
+  --track: rgba(255, 255, 255, 0.16);
+  --hover: rgba(255, 255, 255, 0.07);
+  --shadow: 0 12px 32px -10px rgba(0, 0, 0, 0.6), 0 2px 8px -4px rgba(0, 0, 0, 0.5);
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  font: 14px/1.5 system-ui, -apple-system, 'Segoe UI', 'Hiragino Kaku Gothic ProN', sans-serif;
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+}
+
+#map {
+  position: absolute;
+  inset: 0;
+}
+
+/* ---- パネル ---- */
+.panel {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  width: 300px;
+  max-width: 88vw;
+  /* 常に全高で固定。top:0 + bottom:0 で確実に画面の縦いっぱいにする
+     （height:100dvh の dvh 単位に頼らない）。height:auto にすると内容が
+     画面より低いときパネルが縮み、上半分だけになったり切替で下端が動く。 */
+  bottom: 0;
+  /* backdrop-filter（すりガラス）は使わない。実GPUでの合成不具合により、
+     内部スクロールを持つパネルで描画が破綻することがある。 */
+  background: var(--surface-solid);
+  border-right: 1px solid var(--line);
+  border-radius: 0;
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.panel.collapsed {
+  /* 畳んだらヘッダの高さだけに（全高固定を解除） */
+  bottom: auto;
+  height: auto;
+}
+
+.panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 12px 12px 12px 14px;
+  border-bottom: 1px solid var(--line);
+  flex: none;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.brand-mark {
+  font-size: 18px;
+  line-height: 1;
+}
+
+.panel h1 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0;
+  line-height: 1.25;
+}
+
+.brand-sub {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--ink-3);
+}
+
+.head-actions {
+  display: flex;
+  gap: 4px;
+}
+
+.icon-btn {
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--ink-2);
+  font-size: 15px;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.icon-btn:hover {
+  background: var(--hover);
+  color: var(--ink);
+}
+
+.panel-body {
+  padding: 14px;
+  display: grid;
+  gap: 16px;
+  align-content: start;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  /* パネル内スクロールが地図のズーム/ページスクロールへ連鎖しないようにする */
+  overscroll-behavior: contain;
+}
+
+.panel.collapsed .panel-body {
+  display: none;
+}
+
+.field {
+  display: grid;
+  gap: 8px;
+}
+
+.field-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.field-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.mini-btn {
+  appearance: none;
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--ink-2);
+  font: inherit;
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.mini-btn:hover {
+  background: var(--hover);
+  color: var(--ink);
+}
+
+.mini-btn[aria-pressed='true'] {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-ink);
+}
+
+/* ---- 地震の検索 ---- */
+.event-search {
+  display: grid;
+  gap: 8px;
+}
+
+.event-q {
+  width: 100%;
+  appearance: none;
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  font-size: 13px;
+  padding: 8px 10px;
+}
+
+.event-q:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.event-q:disabled {
+  opacity: 0.6;
+}
+
+.event-status {
+  margin: 0;
+  font-size: 11px;
+  color: var(--ink-3);
+}
+
+/* 選択中の地震。検索語を変えて一覧から外れても手元に残す。 */
+.event-current {
+  display: grid;
+  gap: 2px;
+  padding: 8px 10px;
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-sm);
+}
+
+.event-current[hidden] {
+  display: none;
+}
+
+.event-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: min(40dvh, 340px);
+  overflow-y: auto;
+  /* 一覧の端までスクロールしたとき、地図まで巻き込んで動かさない */
+  overscroll-behavior: contain;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+}
+
+.ev-row {
+  display: grid;
+  gap: 2px;
+  width: 100%;
+  appearance: none;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  padding: 8px 10px;
+  cursor: pointer;
+}
+
+.event-list li:last-child .ev-row {
+  border-bottom: 0;
+}
+
+.ev-row:hover {
+  background: var(--hover);
+}
+
+.ev-row[aria-current='true'] {
+  background: var(--hover);
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+
+.ev-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ev-name {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.ev-shindo {
+  flex: none;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1.6;
+  padding: 0 6px;
+  border: 1px solid var(--line-2);
+  border-radius: 999px;
+}
+
+.ev-date {
+  font-size: 11px;
+  color: var(--ink-2);
+}
+
+.ev-meta {
+  font-size: 11px;
+  color: var(--ink-3);
+}
+
+/* ---- 時間帯バー（画面下端に常設） ---- */
+.timebar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  height: var(--timebar-h);
+  padding: 8px 14px calc(8px + env(safe-area-inset-bottom, 0px));
+  background: var(--surface);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-top: 1px solid var(--line);
+}
+
+.tb-play {
+  flex: none;
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--line-2);
+  border-radius: 50%;
+  background: var(--surface-solid);
+  color: var(--ink);
+  font-size: 12px;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.tb-play:hover {
+  background: var(--hover);
+}
+
+.tb-play[aria-pressed='true'] {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-ink);
+}
+
+.tb-main {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 1px 6px;
+}
+
+/* 縦軸の目盛り。トラックと同じ高さに上下端を合わせる。 */
+.tb-yaxis {
+  grid-column: 1;
+  grid-row: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 34px;
+  padding: 1px 0;
+  font-size: 9px;
+  line-height: 1;
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  white-space: nowrap;
+}
+
+/* スライダーのつまみの中心と、プロファイルの各時刻の x 座標を合わせるため、
+   トラックの左右をつまみ半分だけ内側に寄せる。 */
+.tb-track {
+  --thumb: 16px;
+  grid-column: 2;
+  grid-row: 1;
+  position: relative;
+  height: 34px;
+  padding: 0 calc(var(--thumb) / 2);
+}
+
+.tb-chart {
+  position: absolute;
+  top: 0;
+  left: calc(var(--thumb) / 2);
+  /* SVG は置換要素なので width:auto だと viewBox の縦横比から幅が決まってしまう
+     （23:100 なので高さ30pxに対して7pxになる）。明示的に伸ばす。 */
+  width: calc(100% - var(--thumb));
+  height: 100%;
+  overflow: visible;
+}
+
+.tb-median {
+  fill: none;
+  stroke: var(--ink-2);
+  stroke-width: 1.75;
+  stroke-linejoin: round;
+}
+
+.tb-cursor {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  margin-left: calc(var(--thumb) / 2 - 1px);
+  background: var(--accent);
+  border-radius: 1px;
+  pointer-events: none;
+}
+
+/* 目盛りと現在位置は SVG 側で描くので、input 自体のトラックとつまみは透明にする。 */
+.tb-slider {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  appearance: none;
+  -webkit-appearance: none;
+  background: transparent;
+  cursor: ew-resize;
+}
+
+.tb-slider:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.tb-slider::-webkit-slider-runnable-track {
+  height: 100%;
+  background: transparent;
+}
+
+.tb-slider::-moz-range-track {
+  height: 100%;
+  background: transparent;
+}
+
+.tb-slider::-webkit-slider-thumb {
+  appearance: none;
+  -webkit-appearance: none;
+  width: var(--thumb);
+  height: var(--thumb);
+  margin-top: calc((34px - var(--thumb)) / 2);
+  border-radius: 50%;
+  background: var(--accent);
+  border: 2px solid var(--surface-solid);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+}
+
+.tb-slider::-moz-range-thumb {
+  width: var(--thumb);
+  height: var(--thumb);
+  border-radius: 50%;
+  background: var(--accent);
+  border: 2px solid var(--surface-solid);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+}
+
+.tb-ticks {
+  grid-column: 2;
+  grid-row: 2;
+  display: flex;
+  justify-content: space-between;
+  padding: 0 calc(16px / 2);
+  font-size: 10px;
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+
+.tb-readout {
+  flex: none;
+  display: grid;
+  justify-items: end;
+  line-height: 1.2;
+}
+
+.tb-hour {
+  font-size: 19px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.tb-stat {
+  font-size: 10.5px;
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.tb-legend {
+  flex: none;
+  width: 168px;
+}
+
+.tb-legend[hidden] {
+  display: none;
+}
+
+/* ---- 収録データの要約 ---- */
+.dataset-info {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 3px 12px;
+  margin: 0;
+  font-size: 12px;
+}
+
+.dataset-info dt {
+  color: var(--ink-3);
+}
+
+.dataset-info dd {
+  margin: 0;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+/* ---- レイヤートグル ---- */
+.toggles {
+  display: grid;
+  gap: 2px;
+}
+
+.toggle {
+  /* 中の checkbox（視覚非表示）をこのラベル内に閉じ込める。基準がスクロール領域外に
+     なると、フォーカス移動時にパネルのスクロールが壊れる。 */
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 8px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.toggle:hover {
+  background: var(--hover);
+}
+
+.toggle input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.switch {
+  position: relative;
+  flex: none;
+  width: 34px;
+  height: 20px;
+  border-radius: 999px;
+  background: var(--track);
+  transition: background 0.18s ease;
+}
+
+.switch::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  transition: transform 0.18s ease;
+}
+
+.toggle input:checked + .switch {
+  background: var(--accent);
+}
+
+.toggle input:checked + .switch::after {
+  transform: translateX(14px);
+}
+
+.toggle input:focus-visible + .switch {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.toggle .t-label {
+  /* flex:1 にすると i ボタンが行の右端へ離れてしまうため自然幅 */
+  flex: 0 1 auto;
+  min-width: 0;
+  font-size: 13px;
+}
+
+/* ---- レイヤー説明の i ボタン / 説明文 ---- */
+.info-btn {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 1px solid var(--line-2);
+  border-radius: 50%;
+  background: transparent;
+  color: var(--ink-3);
+  font: italic 700 10px/1 Georgia, 'Times New Roman', serif;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.info-btn:hover {
+  background: var(--hover);
+  color: var(--ink);
+}
+
+.info-btn[aria-expanded='true'] {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-ink);
+}
+
+.layer-desc {
+  padding: 2px 8px 6px 44px;
+  font-size: 11.5px;
+  line-height: 1.65;
+  color: var(--ink-2);
+}
+
+.layer-desc[hidden] {
+  display: none;
+}
+
+/* ---- 各レイヤー直下のインライン凡例 ---- */
+.layer-item {
+  display: grid;
+  gap: 2px;
+}
+
+.layer-legend {
+  display: grid;
+  gap: 3px;
+  padding: 2px 8px 6px 44px;
+}
+
+.layer-legend[hidden] {
+  display: none;
+}
+
+.lg-row {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 11.5px;
+  color: var(--ink-2);
+}
+
+.lg-sw {
+  flex: none;
+  width: 13px;
+  height: 13px;
+  border: 1px solid var(--line-2);
+}
+
+.lg-square {
+  border-radius: 3px;
+}
+
+.lg-circle {
+  border-radius: 50%;
+  border-color: transparent;
+}
+
+/* 連続量（サイクル長）はグラデーションバーで示す。段階リストだと段の境目に意味がある
+   ように見えてしまう。 */
+.lg-bar {
+  height: 10px;
+  border-radius: 5px;
+  border: 1px solid var(--line-2);
+}
+
+.lg-ticks {
+  position: relative;
+  height: 14px;
+  font-size: 10.5px;
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+
+.lg-tick {
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+  white-space: nowrap;
+}
+
+.lg-tick:first-child {
+  transform: none;
+}
+
+.lg-tick:last-child {
+  transform: translateX(-100%);
+}
+
+/* ---- レイヤー不透明度スライダー ---- */
+.layer-opacity {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 8px 4px 44px;
+}
+
+.layer-opacity[hidden] {
+  display: none;
+}
+
+.layer-opacity input[type='range'] {
+  flex: 1;
+  height: 8px;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+.op-val {
+  flex: none;
+  width: 34px;
+  text-align: right;
+  font-size: 10.5px;
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---- フッタ ---- */
+.panel-foot {
+  flex: none;
+  padding: 12px 14px;
+  font-size: 10.5px;
+  line-height: 1.5;
+  color: var(--ink-3);
+  border-top: 1px solid var(--line);
+}
+
+.panel.collapsed .panel-foot {
+  display: none;
+}
+
+.panel-foot a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.panel-foot a:hover {
+  text-decoration: underline;
+}
+
+.build-ver {
+  margin-left: 6px;
+}
+
+/* ---- ポップアップ（MapLibre 上書き） ---- */
+.maplibregl-popup-content {
+  background: var(--surface-solid);
+  color: var(--ink);
+  border: 1px solid var(--line-2);
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+  padding: 12px 14px;
+  font: inherit;
+}
+
+.maplibregl-popup-close-button {
+  color: var(--ink-3);
+  font-size: 18px;
+  padding: 2px 7px;
+}
+
+.maplibregl-popup-tip {
+  display: none;
+}
+
+.pp-title {
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.pp-sub {
+  font-size: 12px;
+  color: var(--ink-2);
+  margin-top: 1px;
+}
+
+/* 24時間の推移。1交差点1フィーチャにしたことで、クリックした地点の1日分がその場に揃う。 */
+.pp-spark {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin: 10px 0 0;
+  overflow: visible;
+}
+
+.spark-line {
+  fill: none;
+  stroke: var(--ink-3);
+  stroke-width: 1.5;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.spark-guide {
+  stroke: var(--accent);
+  stroke-width: 1;
+  stroke-dasharray: 2 2;
+  opacity: 0.7;
+}
+
+.spark-now {
+  stroke: var(--surface-solid);
+  stroke-width: 1.5;
+}
+
+.pp-spark-axis {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+
+.pp-dl {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 3px 14px;
+  margin: 9px 0 0;
+}
+
+.pp-dl dt {
+  color: var(--ink-2);
+  font-size: 12px;
+}
+
+.pp-dl dd {
+  margin: 0;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+.pp-dl dd.pp-strong {
+  color: var(--accent);
+  font-size: 15px;
+}
+
+.pp-foot {
+  margin-top: 9px;
+  padding-top: 8px;
+  border-top: 1px solid var(--line);
+  font-size: 11px;
+  color: var(--ink-3);
+}
+
+.pp-foot a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.pp-foot a:hover {
+  text-decoration: underline;
+}
+
+/* ---- 背景地図スイッチャー（右下） ---- */
+.basemap-switch {
+  display: flex;
+  gap: 2px;
+  padding: 3px;
+  background: var(--surface-solid);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow);
+}
+
+.basemap-switch button {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: var(--ink-2);
+  font: inherit;
+  font-weight: 600;
+  font-size: 12px;
+  padding: 5px 12px;
+  border-radius: 7px;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.basemap-switch button:hover {
+  color: var(--ink);
+}
+
+.basemap-switch button[aria-selected='true'] {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+/* ---- MapLibre コントロールの馴染ませ ---- */
+/* 下端の常設タイムバーに重ならないよう、下寄せのコントロールを持ち上げる */
+.maplibregl-ctrl-bottom-right,
+.maplibregl-ctrl-bottom-left {
+  margin-bottom: var(--timebar-h);
+}
+
+.maplibregl-ctrl-group {
+  background: var(--surface-solid);
+  border-radius: 10px;
+  box-shadow: var(--shadow);
+}
+
+.maplibregl-ctrl-attrib {
+  font-size: 10px;
+}
+
+/* MapLibre 標準アイコンは fill='#333' 固定のため、ダークテーマだと
+   暗い背景に埋もれて「黒く塗りつぶされた四角」に見える。
+   反転してから色相を戻し、現在地アイコン等の色味も保つ。 */
+:root[data-theme='dark'] .maplibregl-ctrl-group button .maplibregl-ctrl-icon {
+  filter: invert(1) hue-rotate(180deg);
+}
+
+/* ボタン間の区切り線（既定は #ddd）とホバーもテーマに合わせる */
+:root[data-theme='dark'] .maplibregl-ctrl-group button + button {
+  border-top-color: var(--line-2);
+}
+
+:root[data-theme='dark'] .maplibregl-ctrl-group button:not(:disabled):hover {
+  background-color: var(--hover);
+}
+
+/* ---- レスポンシブ（モバイルはボトムシート） ---- */
+@media (min-width: 641px) {
+  /* パネルがタイムバーの下に潜り込まないようにする */
+  .panel {
+    max-height: calc(100dvh - var(--timebar-h) - 16px);
+  }
+}
+
+@media (max-width: 640px) {
+
+  /* タイムバーは常に最前面・最下段。パネル（ボトムシート）はその上に載せる。 */
+  .timebar {
+    flex-wrap: wrap;
+    gap: 8px 12px;
+    align-content: center;
+    padding: 6px 12px calc(6px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .tb-main {
+    order: 1;
+    flex: 1 1 auto;
+  }
+
+  .tb-readout {
+    order: 2;
+  }
+
+  .tb-legend {
+    order: 3;
+    flex: 1 0 100%;
+    width: auto;
+  }
+
+  .tb-play {
+    order: 0;
+  }
+
+  .panel {
+    top: auto;
+    left: 0;
+    right: 0;
+    bottom: calc(var(--timebar-h) - env(safe-area-inset-bottom, 0px));
+    width: auto;
+    max-width: none;
+    height: auto;
+    max-height: 62dvh;
+    border: none;
+    border-top: 1px solid var(--line);
+    border-radius: 0;
+  }
+
+  .panel.collapsed {
+    max-height: none;
+    /* デスクトップ用の .panel.collapsed { bottom:auto } を打ち消す。
+       モバイルは top:auto のため bottom まで auto になるとパネルが画面最上部へ飛ぶ。 */
+    bottom: calc(var(--timebar-h) - env(safe-area-inset-bottom, 0px));
+  }
+
+  .panel-head {
+    padding: 14px 12px;
+  }
+
+  /* 畳んだパネルのヘッダ分も含めて、地図コントロールを持ち上げる */
+  .maplibregl-ctrl-bottom-right,
+  .maplibregl-ctrl-bottom-left {
+    margin-bottom: calc(var(--timebar-h) + 60px);
+  }
+
+  /* タッチ操作しやすいよう当たり判定を拡大 */
+  .toggle {
+    padding: 9px 8px;
+  }
+
+  .ev-row {
+    padding: 10px;
+  }
+
+  .info-btn {
+    width: 20px;
+    height: 20px;
+    font-size: 12px;
+  }
+
+  .basemap-switch button {
+    padding: 7px 14px;
+  }
+
+  .maplibregl-ctrl-top-right {
+    margin-top: env(safe-area-inset-top, 0px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+  }
+}
+
+/* ---- 診断HUD（?debug 時のみ） ---- */
+#diag-hud {
+  position: fixed;
+  top: 8px;
+  right: 8px;
+  z-index: 9999;
+  max-width: 60vw;
+  max-height: 70vh;
+  overflow: auto;
+  padding: 8px 10px;
+  background: rgba(0, 0, 0, 0.82);
+  color: #d6f5c8;
+  font: 11px/1.45 ui-monospace, SFMono-Regular, Menlo, monospace;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  pointer-events: none;
+  white-space: normal;
+  word-break: break-all;
+}
+
+#diag-hud b {
+  color: #fff;
+}
+
+#diag-hud u {
+  display: inline-block;
+  margin-top: 4px;
+  color: #7fd0ff;
+  text-decoration: none;
+  font-weight: 700;
+}
