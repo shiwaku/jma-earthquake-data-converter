@@ -101,11 +101,11 @@ tippecanoe -zg -B7 -rg -o shindo_convert.pmtiles -r1 -d8 -pf -pk shindo_convert.
 ![image](https://github.com/shi-works/jma-earthquake-data-converter/assets/71203808/1c06cc86-f8a3-48ca-8971-1de10550a864)
 ### 使用データ
 #### 震源データ
-`https://xs489works.xsrv.jp/pmtiles-data/jma-earthquake/hypocenter_convert.pmtiles`,62MB
+`https://shi-works.com/pmtiles/jma-earthquake/hypocenter_convert.pmtiles`,56MB（1919〜2022年）
 #### 震度データ
-`https://xs489works.xsrv.jp/pmtiles-data/jma-earthquake/shindo_convert.pmtiles`,150MB
+`https://shi-works.com/pmtiles/jma-earthquake/shindo_convert.pmtiles`,271MB（1919〜2022年）
 #### 人口集中地区（2020年）
-`https://xs489works.xsrv.jp/pmtiles-data/r2DID/2020_did_ddsw_01-47_JGD2011.pmtiles`,12.7MB
+`https://shi-works.com/pmtiles/r2DID/2020_did_ddsw_01-47_JGD2011.pmtiles`,12.7MB
 
 ## ビューワ（viewer/）
 - 上記デモサイト（`index.html`）を作り直したものです。Vite + TypeScript + MapLibre GL JS 6。
@@ -121,7 +121,7 @@ cd viewer
 npm ci
 npm run dev
 ```
-- PMTilesの配置場所は `viewer/.env` の `VITE_PMTILES_BASE` で切り替えられます（既定は外部ホスティング）。
+- PMTilesの配置場所は `viewer/.env` の `VITE_PMTILES_BASE` で切り替えられます。既定は Cloudflare R2（`https://shi-works.com/pmtiles`）で、震源・震度・人口集中地区の3つともこの1行で切り替わります。
 
 ## 自動化（GitHub Actions）
 - `.github/workflows/check-jma-updates.yml` … 毎月1日に気象庁の配信状況を `data/jma_manifest.json` と照合し、差分があればIssueに起票します。検知のみで、変換は行いません。

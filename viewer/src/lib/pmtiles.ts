@@ -4,12 +4,11 @@
  * 各レイヤーはここからの相対パスだけを持つ。配信元を変えるときに触るのは
  * `.env` の1行だけで、震源・震度・人口集中地区の3つとも同時に切り替わる。
  *
- * 既定は現行の Xserver（xs489works）。この配信元は 2026-09-30 が利用期限で、
- * Cloudflare R2（`https://shi-works.com/pmtiles`）への移行が予定されている。
- * 移行後のパスは `pmtiles-data/` を `pmtiles/` に正規化したもので、
- * ルート以下は変わらない。
+ * 2026-08-27にCloudflare R2（バケット `shi-works`）へ移行した。旧配信元の
+ * Xserver（`https://xs489works.xsrv.jp/pmtiles-data`）は2026-09-30が利用期限。
+ * パスは `pmtiles-data/` を `pmtiles/` に正規化しただけで、それ以下は同じ。
  */
-const DEFAULT_BASE = 'https://xs489works.xsrv.jp/pmtiles-data'
+const DEFAULT_BASE = 'https://shi-works.com/pmtiles'
 
 export const PMTILES_BASE = (import.meta.env.VITE_PMTILES_BASE || DEFAULT_BASE).replace(/\/+$/, '')
 
