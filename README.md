@@ -1,8 +1,8 @@
 # jma-earthquake-data-converter
 
-気象庁 [地震月報(カタログ編)](https://www.data.jma.go.jp/eqev/data/bulletin/shindo.html) の震度データ（1919〜2022年）を、そのままでは扱えない固定長テキストから GIS データ（CSV / GeoParquet / PMTiles）へ変換し、地図で見られるようにします。
+気象庁 [地震月報(カタログ編)](https://www.data.jma.go.jp/eqev/data/bulletin/shindo.html) の震源データ（1919〜2023年）と震度データ（1919〜2022年）を、そのままでは扱えない固定長テキストから GIS データ（CSV / GeoParquet / PMTiles / MLT）へ変換し、地図で見られるようにします。震源は深さ方向に配置して立体表示できます。
 
-[![Demo](https://img.shields.io/badge/demo-震度マップ-2a78d6)](https://shiwaku.github.io/jma-earthquake-data-converter/)
+[![Demo](https://img.shields.io/badge/demo-震源・震度マップ-2a78d6)](https://shiwaku.github.io/jma-earthquake-data-converter/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 [![Data: CC BY 4.0](https://img.shields.io/badge/data-CC%20BY%204.0-green)](#ライセンス)
 
@@ -149,6 +149,13 @@ PMTiles は Cloudflare R2 で配信しています。
 | 震度 | `https://shi-works.com/pmtiles/jma-earthquake/shindo_convert.pmtiles` | 271MB |
 | 人口集中地区（2020年） | `https://shi-works.com/pmtiles/r2DID/2020_did_ddsw_01-47_JGD2011.pmtiles` | 12.7MB |
 
+MLT は震源の立体表示に使っています。z/x/y のディレクトリ構成で配信しています。
+
+| データ | URL | ズーム |
+|---|---|---|
+| 震源（有感のみ） | `https://shi-works.com/mlt/jma-earthquake/{z}/{x}/{y}.mlt` | 0〜8 |
+| 震源（無感含む） | `https://shi-works.com/mlt/jma-hypocenter-unfelt/{z}/{x}/{y}.mlt` | 0〜10 |
+
 PMTiles は [PMTiles Viewer](https://protomaps.github.io/PMTiles/) でも閲覧できます。
 
 中間生成物（CSV・GeoParquet）は配布していません。上のクイックスタートで生成するか、`run-pipeline.yml` を手動実行すると GitHub Releases に公開されます。`shindo_convert.csv` は203MBあり、GitHubのファイルサイズ上限（100MB）を超えるためリポジトリには含められません。
@@ -222,8 +229,13 @@ tippecanoe -zg -B7 -rg -o shindo_convert.pmtiles -r1 -d8 -pf -pk -l shindo_conve
 
 ## ビューワ（`viewer/`）
 
-Vite + TypeScript + MapLibre GL JS 6 で構築しています。
+Vite + TypeScript + MapLibre GL JS 6 + deck.gl 9 で構築しています。
 
+初期表示は地図を傾けた状態で、震源を深さ方向に配置した立体表示になります。
+
+現在は「震源（無感含む）」のみを表示しています。「人口集中地区」「震源（有感のみ）」「各観測点の震度」は実装済みですが `src/map/layers/registry.ts` でコメントアウトしてあり、戻せば地震の検索と震度分布の表示も有効になります。
+
+- 震源の**深さを色で表します**。刻みは非線形です。実データの深さは中央値14km・95%が84kmより浅く・最大698kmと浅部へ強く偏っており、0〜700kmを線形に塗ると95%が同じ色に潰れるためです
 - **最大震度3以上の15,480件**から震央地名・年月日・M・震度で検索できます（`熊本 M7`、`2011-3-11`、`震度6弱 大阪` のようにAND指定可）
 - 地震ごとに「強く揺れた範囲」を索引に持たせ、選ぶとその範囲へカメラが寄ります
 - クリックで観測点・震源の属性表示、ダークモード、背景地図の切替
@@ -247,12 +259,13 @@ PMTilesの配置場所は `viewer/.env` の `VITE_PMTILES_BASE` で切り替え�
 
 定期実行は**検知のみ**です。変換自体は気象庁側の仕様変更を確認してから手動で流す想定です。
 
-## 実験: MLT（MapLibre Tile）形式
+## MLT（MapLibre Tile）形式
+
+震源データの配信に使っています。[MLT](https://maplibre.org/maplibre-tile-spec/) はMVTの後継として策定された形式で、カラム指向のレイアウトと型別の軽量エンコーディングでサイズを削減します。
 
 <details>
-<summary>震源データで MLT を試した結果と手順</summary>
+<summary>生成手順と計測結果</summary>
 
-[MLT](https://maplibre.org/maplibre-tile-spec/) はMVTの後継として策定された形式で、カラム指向のレイアウトと型別の軽量エンコーディングでサイズを削減します。
 
 ```bash
 bash src/build_mlt_tiles.sh work/hypocenter_convert.csv work/mlt
@@ -300,7 +313,7 @@ cd ~/mlt-spec/java && chmod +x gradlew && ./gradlew cli
 
 本プログラムは[MITライセンス](LICENSE)で提供されます。
 
-本データセットは CC BY 4.0 で提供されます。使用の際には本リポジトリへのリンクを提示してください。本データセットは、気象庁が公開している地震月報(カタログ編)の震度データ及び震度観測点一覧を加工して作成したものです。使用・加工にあたっては[気象庁の利用規約](https://www.jma.go.jp/jma/kishou/info/coment.html)を必ずご確認ください。
+本データセットは CC BY 4.0 で提供されます。使用の際には本リポジトリへのリンクを提示してください。本データセットは、気象庁が公開している地震月報(カタログ編)の震源データ、震度データ及び震度観測点一覧を加工して作成したものです。使用・加工にあたっては[気象庁の利用規約](https://www.jma.go.jp/jma/kishou/info/coment.html)を必ずご確認ください。
 
 人口集中地区は[政府統計の総合窓口（e-Stat）](https://www.e-stat.go.jp/gis)、背景地図は国土地理院の最適化ベクトルタイル・全国最新写真を使用しています。
 
