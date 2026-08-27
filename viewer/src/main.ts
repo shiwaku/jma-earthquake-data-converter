@@ -30,8 +30,9 @@ const map = createMap('map', store.get())
 
 createDataLayers(map, store)
 createEventCamera(map, store, hasInitialHash)
-createInteractions(map, store)
-createHypocenter3d(map, store)
+// 震源の点はクリック判定も持つ。interactions はその口を受け取る。
+const hypocenter3d = createHypocenter3d(map, store)
+createInteractions(map, store, hypocenter3d)
 createBasemapDim(map, store)
 createPopup(map, store)
 createBasemapSwitch(map, store)

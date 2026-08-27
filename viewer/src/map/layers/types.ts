@@ -74,8 +74,12 @@ export interface LayerModule {
   def: LayerDef
   /** 地図に載せるレイヤー ID。描画順（背面→前面）。 */
   layerIds: string[]
-  /** クリック・ホバー判定に使うレイヤー ID（当たり判定が最も広いもの）。 */
-  pickLayerId: string
+  /**
+   * クリック・ホバー判定に使うレイヤー ID（当たり判定が最も広いもの）。
+   * 2Dで拾わないレイヤーは null。無感震源のように描画も判定も deck.gl 側が
+   * 持つものがこれにあたる。
+   */
+  pickLayerId: string | null
   specs(ctx: PaintContext): LayerSpecification[]
   paintUpdates(ctx: PaintContext): PaintUpdate[]
   /** layout プロパティの更新（任意）。 */
