@@ -24,6 +24,8 @@ export interface AppState {
   selection: Selection | null
   /** 震源を深さで立体表示するモード。 */
   depth3d: boolean
+  /** 背景地図を薄くしているか。地図の傾きに連動する。 */
+  basemapDim: boolean
 }
 
 export type AppStore = Store<AppState>
@@ -52,7 +54,10 @@ export function createAppStore(initial: Partial<AppState> = {}): AppStore {
     basemap: 'pale',
     layers: defaultLayers(),
     selection: null,
-    depth3d: false,
+    // 震源は常に深さ方向へ配置する。傾ければそのまま立体に見える。
+    depth3d: true,
+    // 初期カメラを傾けてあるので、減光も最初から効かせる。
+    basemapDim: true,
     ...initial,
   })
 

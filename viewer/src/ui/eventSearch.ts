@@ -167,7 +167,22 @@ export function createEventSearch(store: AppStore): void {
     if (!bar.contains(ev.target as Node)) close()
   })
 
+  /**
+   * 選択した地震を映すレイヤーが1つも無いときは、検索バーごと隠す。
+   * eventId は「震源（有感のみ）」と「各観測点の震度」のフィルタにしか使われず、
+   * どちらもOFFなら選んでも画面が変わらないため、操作させない方がよい。
+   */
+  const DEPENDENTS = ['hypocenter', 'shindo']
+
+  function syncBarVisibility(): void {
+    const layers = store.get().layers
+    const usable = DEPENDENTS.some((key) => layers[key]?.visible)
+    bar.hidden = !usable
+    if (!usable) close()
+  }
+
   store.subscribe((s, prev) => {
+    if (s.layers !== prev.layers) syncBarVisibility()
     if (s.eventId === prev.eventId) return
     // 選択の印だけを付け替える。一覧そのものは検索語が変わらない限り同じ。
     for (const btn of list.querySelectorAll<HTMLButtonElement>('.ev-row')) {
@@ -176,4 +191,6 @@ export function createEventSearch(store: AppStore): void {
     }
     renderCurrent()
   })
+
+  syncBarVisibility()
 }

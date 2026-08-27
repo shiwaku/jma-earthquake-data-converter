@@ -106,9 +106,11 @@ export function createLayerPanel(store: AppStore): void {
       row.opValue.textContent = percent(s.opacity)
       // 連続量のグラデーション凡例はタイムバーが持つ（パネルを畳んでも読めるように）。
       // ここに出すのはカテゴリの色見本だけ。テーマで配色が変わるので毎回作り直す。
+      // カテゴリの色見本も連続量のグラデーションも、どちらもトグルの直下に出す。
+      // 参考実装はグラデーションをタイムバーに逃がしていたが、こちらにタイムバーはない。
       const legend = mod.legend({ eventId, theme })
-      row.legend.innerHTML = legend.kind === 'items' ? legendMarkup(legend) : ''
-      row.legend.hidden = !s.visible || legend.kind !== 'items'
+      row.legend.innerHTML = legendMarkup(legend)
+      row.legend.hidden = !s.visible
     }
   }
 

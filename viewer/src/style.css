@@ -223,6 +223,11 @@ body {
   box-shadow: var(--shadow);
 }
 
+/* display:flex が hidden 属性を打ち消すため、明示的に消す。 */
+.eventbar[hidden] {
+  display: none;
+}
+
 /* 選択中の地震。バーの中では1行に並べる。 */
 .event-current {
   display: flex;
@@ -746,6 +751,8 @@ body {
   font-size: 11.5px;
   line-height: 1.65;
   color: var(--ink-2);
+  /* 説明は段落で区切る。長いので続き書きだと読み通せない */
+  white-space: pre-line;
 }
 
 .layer-desc[hidden] {
