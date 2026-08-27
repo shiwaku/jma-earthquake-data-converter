@@ -14,6 +14,9 @@ tippecanoeは -P で行区切りGeoJSONを並列読み込みできる。
 必ず小数にする。MLTへ変換する場合に要る。同じ列に 15 と 15.3 が混在すると
 MVT内でINT/DOUBLEが混ざり、MLTエンコーダが型エラーで止まるため。
 
+--keep を指定すると、その列だけを属性に載せる。--rename で名前を付け替える。
+--where-empty はその列が空の行だけを残す（震源カタログから無感地震を抜くのに使う）。
+
 座標が欠損している行、および緯度経度がともに0の行は出力から除く。
 """
 import argparse
@@ -32,7 +35,23 @@ def parse_args():
                         help='数値として出力する列名（複数指定可）')
     parser.add_argument('--float', action='append', default=[], dest='float_columns',
                         help='必ず小数として出力する列名（MLT変換用、複数指定可）')
+    parser.add_argument('--keep', action='append', default=[],
+                        help='属性に載せる列名。指定しなければ全列（複数指定可）')
+    parser.add_argument('--rename', action='append', default=[], metavar='元名=新名',
+                        help='属性名の付け替え（複数指定可）')
+    parser.add_argument('--where-empty', action='append', default=[], dest='where_empty',
+                        help='その列が空の行だけを出力する（複数指定可）')
     return parser.parse_args()
+
+
+def parse_renames(pairs):
+    renames = {}
+    for pair in pairs:
+        if '=' not in pair:
+            sys.exit(f'--rename は 元名=新名 の形で指定してください: {pair}')
+        old, new = pair.split('=', 1)
+        renames[old] = new
+    return renames
 
 
 def to_number(value):
@@ -52,8 +71,11 @@ def main():
     args = parse_args()
     floats = set(args.float_columns)
     numeric = set(args.number) | floats
+    keep = set(args.keep)
+    renames = parse_renames(args.rename)
+    where_empty = list(args.where_empty)
 
-    total = written = skipped = 0
+    total = written = skipped = filtered = 0
     with open(args.input_csv, encoding='utf-8', newline='') as source, \
             open(args.output_geojsonl, 'w', encoding='utf-8', newline='\n') as sink:
         reader = csv.DictReader(source)
@@ -62,12 +84,21 @@ def main():
         for column in (args.lon, args.lat):
             if column not in reader.fieldnames:
                 sys.exit(f'列 {column} が {args.input_csv} にありません')
-        unknown = numeric - set(reader.fieldnames)
+        columns = set(reader.fieldnames)
+        unknown = numeric - columns
         if unknown:
             sys.exit(f'--number / --float に存在しない列が指定されています: {", ".join(sorted(unknown))}')
+        for option, names in (('--keep', keep), ('--rename', set(renames)), ('--where-empty', set(where_empty))):
+            missing = names - columns
+            if missing:
+                sys.exit(f'{option} に存在しない列が指定されています: {", ".join(sorted(missing))}')
 
         for record in reader:
             total += 1
+            # 絞り込みは座標を見るより先に行う。除外した行の数を分けて数えたいため。
+            if any((record.get(column) or '') != '' for column in where_empty):
+                filtered += 1
+                continue
             lon = to_number(record[args.lon])
             lat = to_number(record[args.lat])
             if lon is None or lat is None or (lon == 0 and lat == 0):
@@ -78,14 +109,18 @@ def main():
             for key, value in record.items():
                 if key in (args.lon, args.lat) or key is None:
                     continue
+                if keep and key not in keep:
+                    continue
                 if value is None or value == '':
                     continue
+                # 付け替えは出力の直前だけ。--number / --float / --keep は元の列名で指定する
+                name = renames.get(key, key)
                 if key in numeric:
                     number = to_number(value)
                     if number is not None:
-                        properties[key] = number + FLOAT_OFFSET if key in floats else number
+                        properties[name] = number + FLOAT_OFFSET if key in floats else number
                         continue
-                properties[key] = value
+                properties[name] = value
 
             feature = {
                 'type': 'Feature',
@@ -96,7 +131,10 @@ def main():
             written += 1
 
     print(f'{args.input_csv} -> {args.output_geojsonl}')
-    print(f'  入力 {total}行 / 出力 {written}行（座標欠損または0,0の {skipped}行を除外）')
+    note = f'座標欠損または0,0の {skipped}行を除外'
+    if where_empty:
+        note = f'{", ".join(where_empty)} が空でない {filtered}行、' + note
+    print(f'  入力 {total}行 / 出力 {written}行（{note}）')
 
 
 if __name__ == '__main__':
