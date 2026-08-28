@@ -54,6 +54,18 @@ function featureKey(p: Record<string, unknown>, lng: number, lat: number): strin
  */
 const PICK_RADIUS = 5
 
+/**
+ * 点群に載せる点の上限。
+ *
+ * キャッシュは消さない設計（タイルの出入りで点が明滅するのを防ぐため）だが、
+ * 消さないままだと触っているほど増え続ける。実測では、z3で開いてz10まで寄って
+ * z3へ戻すと 36,073点 → 54,665点 のまま減らない。同じズームでも、それまでに
+ * どこを拡大したかで密度が変わってしまう。
+ *
+ * 上限を超えたら**拾った順に古いものから捨てる**。Mapは挿入順を保つのでそのまま使える。
+ */
+const MAX_POINTS = 300_000
+
 /** 立体表示の点を画面座標で拾う口。クリック処理（map/interactions.ts）が使う。 */
 export interface Hypocenter3dPicker {
   /** その位置に点があるか。カーソル形状の判定に使う軽いほう。 */
@@ -91,7 +103,16 @@ export function createHypocenter3d(map: MapLibreMap, store: AppStore): Hypocente
       cache.set(id, { id, position: [lng, lat, z], color: depthColor(km), source })
       added = true
     }
-    if (added) render()
+    if (!added) return
+    // 増えすぎたら古いものから捨てる
+    if (cache.size > MAX_POINTS) {
+      let over = cache.size - MAX_POINTS
+      for (const key of cache.keys()) {
+        cache.delete(key)
+        if (--over <= 0) break
+      }
+    }
+    render()
   }
 
   function schedule(): void {
