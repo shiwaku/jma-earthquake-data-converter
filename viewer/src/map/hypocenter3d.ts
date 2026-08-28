@@ -121,15 +121,40 @@ export function createHypocenter3d(map: MapLibreMap, store: AppStore): Hypocente
     requestAnimationFrame(collect)
   }
 
+  let renderPending = false
+
+  function scheduleRender(): void {
+    if (renderPending) return
+    renderPending = true
+    requestAnimationFrame(() => {
+      renderPending = false
+      render()
+    })
+  }
+
 /**
- * 点の重ね合わせで密度を見せるための基準不透明度。
- * レイヤーパネルのスライダー値にこれを掛ける。濃くすると点が一枚の塊になって
- * 深さが読めなくなるため、上限をここで抑える。
+ * 点の濃さと大きさはズームで変える。
+ *
+ * タイルは低ズームほど強く間引かれる（tippecanoe の --drop-densest-as-needed）。
+ * 引いた絵では点が少ないので、濃さを上げないと震源の並びが読めない。
+ * 逆に寄ると点が一気に増え、濃いままだと重なって一枚の塊になり深さが読めなくなる。
+ *
+ * レイヤーパネルのスライダー値には、ここで求めた濃さを掛ける。
  */
-const BASE_OPACITY = 0.25
+const RAMP = { minZoom: 4, maxZoom: 7, opacityNear: 0.25, opacityFar: 0.9, sizeNear: 1, sizeFar: 3 }
+
+/** ズームから濃さと点の最小径(px)を求める。低ズーム側で濃く・大きく。 */
+function rampFor(zoom: number): { opacity: number; minPixels: number } {
+  const t = Math.min(1, Math.max(0, (zoom - RAMP.minZoom) / (RAMP.maxZoom - RAMP.minZoom)))
+  return {
+    opacity: RAMP.opacityFar + (RAMP.opacityNear - RAMP.opacityFar) * t,
+    minPixels: RAMP.sizeFar + (RAMP.sizeNear - RAMP.sizeFar) * t,
+  }
+}
 
   function render(): void {
     if (!overlay) return
+    const ramp = rampFor(map.getZoom())
     // キャッシュは明滅を防ぐため消さない。代わりにここで表示中のレイヤーだけへ絞る。
     // 不透明度はレイヤーごとに違うので、ソース単位でレイヤーを分ける。
     const layers = store.get().layers
@@ -152,9 +177,9 @@ const BASE_OPACITY = 0.25
             getPosition: (d) => d.position,
             getFillColor: (d) => d.color,
             getRadius: 500,
-            radiusMinPixels: 1,
+            radiusMinPixels: ramp.minPixels,
             radiusMaxPixels: 4,
-            opacity: (layers[source]?.opacity ?? 1) * BASE_OPACITY,
+            opacity: (layers[source]?.opacity ?? 1) * ramp.opacity,
             billboard: true,
             antialiasing: false,
             // ポップアップのために拾えるようにする。点が小さいので当たり判定は
@@ -171,6 +196,8 @@ const BASE_OPACITY = 0.25
       map.addControl(overlay)
       map.on('sourcedata', onSourceData)
       map.on('moveend', schedule)
+      // ズームで濃さが変わる。動かしている最中も追従させる（1フレームに1回）
+      map.on('zoom', scheduleRender)
     }
     schedule()
   }
