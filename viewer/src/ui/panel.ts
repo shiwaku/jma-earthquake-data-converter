@@ -6,7 +6,11 @@ export function createPanel(): void {
   const btn = document.getElementById('collapse-btn') as HTMLButtonElement
 
   function render(): void {
-    btn.textContent = panel.classList.contains('collapsed') ? '▾' : '▴'
+    const collapsed = panel.classList.contains('collapsed')
+    btn.textContent = collapsed ? '▾' : '▴'
+    // 地図上の凡例の出し分けに使う。パネルが開いていればパネル側に凡例が出ており、
+    // 地図にも出すと同じものが2つ並ぶ。
+    document.body.classList.toggle('panel-collapsed', collapsed)
   }
 
   btn.addEventListener('click', () => {

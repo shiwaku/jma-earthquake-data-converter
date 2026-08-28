@@ -612,6 +612,19 @@ body {
   pointer-events: none;
 }
 
+/*
+ * 深さの凡例はパネルの中にも出る（レイヤーごとの凡例）。両方出すと同じものが
+ * 2つ並ぶので、地図上の凡例は**パネルを畳んでいるあいだだけ**出す。
+ * 畳んでも深さの読み方が分かるようにするのが、地図側に置いてある理由。
+ */
+.depth-legend {
+  display: none;
+}
+
+body.panel-collapsed .depth-legend {
+  display: block;
+}
+
 .depth-legend[hidden] {
   display: none;
 }
