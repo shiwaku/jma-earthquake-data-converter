@@ -7,7 +7,15 @@
  * ここでの目的はインストールできるようにすることと、2回目以降の起動を速くすること。
  * オフラインでは地図データが出ないので、画面の枠だけが立ち上がる。
  */
-const CACHE = 'hypocenter-map-shell-v1'
+/**
+ * キャッシュ名。
+ *
+ * **接頭辞で自分の系列を見分けること。** github.io のユーザーサイトは
+ * リポジトリが違っても同じオリジンなので、CacheStorage は姉妹リポジトリと共用になる。
+ * 「自分の名前でないキャッシュを消す」と書くと、隣のアプリのキャッシュまで消してしまう。
+ */
+const CACHE_PREFIX = 'hypocenter-map-shell-'
+const CACHE = `${CACHE_PREFIX}v1`
 
 // 名前が固定のものだけ先に入れる。JS/CSS はビルドごとにファイル名の
 // ハッシュが変わるため、実際に取りに行ったものを都度足していく。
@@ -35,7 +43,8 @@ self.addEventListener('activate', (event) => {
   event.waitUntil(
     (async () => {
       for (const key of await caches.keys()) {
-        if (key !== CACHE) await caches.delete(key)
+        // 自分の系列の古い版だけを消す。隣のアプリのものには触らない
+        if (key.startsWith(CACHE_PREFIX) && key !== CACHE) await caches.delete(key)
       }
       await self.clients.claim()
     })(),
