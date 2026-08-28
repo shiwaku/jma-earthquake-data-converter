@@ -121,40 +121,23 @@ export function createHypocenter3d(map: MapLibreMap, store: AppStore): Hypocente
     requestAnimationFrame(collect)
   }
 
-  let renderPending = false
-
-  function scheduleRender(): void {
-    if (renderPending) return
-    renderPending = true
-    requestAnimationFrame(() => {
-      renderPending = false
-      render()
-    })
-  }
 
 /**
- * 点の濃さと大きさはズームで変える。
+ * 点の濃さと大きさ。**ズームでは変えない。**
  *
- * タイルは低ズームほど強く間引かれる（tippecanoe の --drop-densest-as-needed）。
- * 引いた絵では点が少ないので、濃さを上げないと震源の並びが読めない。
- * 逆に寄ると点が一気に増え、濃いままだと重なって一枚の塊になり深さが読めなくなる。
+ * 一度ズーム連動にしたが、それは「引くほど点が少ない」という誤った前提だった。
+ * 実測すると、画面あたりの点の密度はズームでほとんど変わらない（z3で7,967点/百万px、z7で13,728、z10で9,010）。
+ * tippecanoe の間引き（--drop-densest-as-needed）がタイルあたりの地物数を
+ * 揃えるように働くため、画面密度もおおむね一定になる。
  *
- * レイヤーパネルのスライダー値には、ここで求めた濃さを掛ける。
+ * 元の 0.25 はこの密度に対して薄すぎ、引いた絵でも寄った絵でも点が見えなかった。
+ * データの密度に合わせた一定値にする。
  */
-const RAMP = { minZoom: 4, maxZoom: 7, opacityNear: 0.25, opacityFar: 0.9, sizeNear: 1, sizeFar: 3 }
-
-/** ズームから濃さと点の最小径(px)を求める。低ズーム側で濃く・大きく。 */
-function rampFor(zoom: number): { opacity: number; minPixels: number } {
-  const t = Math.min(1, Math.max(0, (zoom - RAMP.minZoom) / (RAMP.maxZoom - RAMP.minZoom)))
-  return {
-    opacity: RAMP.opacityFar + (RAMP.opacityNear - RAMP.opacityFar) * t,
-    minPixels: RAMP.sizeFar + (RAMP.sizeNear - RAMP.sizeFar) * t,
-  }
-}
+const BASE_OPACITY = 0.5
+const POINT_MIN_PIXELS = 2
 
   function render(): void {
     if (!overlay) return
-    const ramp = rampFor(map.getZoom())
     // キャッシュは明滅を防ぐため消さない。代わりにここで表示中のレイヤーだけへ絞る。
     // 不透明度はレイヤーごとに違うので、ソース単位でレイヤーを分ける。
     const layers = store.get().layers
@@ -177,9 +160,9 @@ function rampFor(zoom: number): { opacity: number; minPixels: number } {
             getPosition: (d) => d.position,
             getFillColor: (d) => d.color,
             getRadius: 500,
-            radiusMinPixels: ramp.minPixels,
+            radiusMinPixels: POINT_MIN_PIXELS,
             radiusMaxPixels: 4,
-            opacity: (layers[source]?.opacity ?? 1) * ramp.opacity,
+            opacity: (layers[source]?.opacity ?? 1) * BASE_OPACITY,
             billboard: true,
             antialiasing: false,
             // ポップアップのために拾えるようにする。点が小さいので当たり判定は
@@ -196,8 +179,6 @@ function rampFor(zoom: number): { opacity: number; minPixels: number } {
       map.addControl(overlay)
       map.on('sourcedata', onSourceData)
       map.on('moveend', schedule)
-      // ズームで濃さが変わる。動かしている最中も追従させる（1フレームに1回）
-      map.on('zoom', scheduleRender)
     }
     schedule()
   }
