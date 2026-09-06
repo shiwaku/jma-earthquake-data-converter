@@ -5,7 +5,7 @@
  * `.env` の1行だけで、震源・震度・人口集中地区の3つとも同時に切り替わる。
  *
  * 2026-08-27にCloudflare R2（バケット `shi-works`）へ移行した。旧配信元の
- * Xserver（`https://xs489works.xsrv.jp/pmtiles-data`）は2026-09-30が利用期限。
+ * Xserver（`https://shi-works.com/pmtiles/`）は2026-09-30が利用期限。
  * パスは `pmtiles-data/` を `pmtiles/` に正規化しただけで、それ以下は同じ。
  */
 const DEFAULT_BASE = 'https://shi-works.com/pmtiles'
