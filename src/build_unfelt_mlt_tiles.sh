@@ -17,6 +17,9 @@ OUT=${2:?使い方: bash src/build_unfelt_mlt_tiles.sh <hypocenter_catalog.csv> 
 JAR=${MLT_ENCODE_JAR:-$HOME/mlt-spec/java/mlt-cli/build/libs/encode.jar}
 MINZOOM=${MINZOOM:-0}
 MAXZOOM=${MAXZOOM:-10}
+# 軽量エンコーディング（整数列のFastPFOR・文字列列のFSST）。配信中のタイルはこれを有効にしてある。
+# MLT_LIGHTWEIGHT=0 で既定設定（Mortonのみ）に戻せる。
+LIGHTWEIGHT=${MLT_LIGHTWEIGHT:-1}
 
 [ -f "$JAR" ] || { echo "encode.jar が見つからない: $JAR" >&2; exit 1; }
 
@@ -48,9 +51,20 @@ tippecanoe --no-tile-compression -Z"$MINZOOM" -z"$MAXZOOM" -l unfelt \
 
 echo "=== 3. MVT → MLT（encode.jar）==="
 # タイルごとに起動するとJVMの立ち上げが17,833回になり数時間かかる。--mbtiles で一括変換する
+#
+# --enable-fastpfor / --enable-fsst は仕様上まだ experimental のため encode.jar では既定オフ。
+# 有効にすると 140.3MB → 89.1MB（-36%）まで縮む。MapLibre GL JS 6.9.0 で読めることは
+# 実測で確認済み（文字列列の 震央地名 まで正しく展開される）。配信中のタイルもこの設定。
 rm -rf "$OUT/mlt" "$OUT/tiles"
 mkdir -p "$OUT/mlt"
-java -jar "$JAR" --mbtiles "$MBTILES" --dir "$OUT/mlt"
+ENCODE_OPTS=""
+if [ "$LIGHTWEIGHT" = "1" ]; then
+  ENCODE_OPTS="--enable-fastpfor --enable-fsst"
+  echo "    軽量エンコーディング: 有効（$ENCODE_OPTS）"
+else
+  echo "    軽量エンコーディング: 無効（Mortonのみ）"
+fi
+java -jar "$JAR" --mbtiles "$MBTILES" --dir "$OUT/mlt" $ENCODE_OPTS
 
 echo "=== 4. MLT(mbtiles) → XYZ ==="
 # MapLibreはHTTP越しにmbtilesを読めないためファイルに開く
