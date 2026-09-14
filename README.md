@@ -112,8 +112,19 @@ python src/explode_mbtiles.py mlt/unfelt.mlt.mbtiles -o tiles --ext mlt
 - **`encode.jar` は `--mbtiles` で一括変換します**。タイルごとに起動するとJVMの立ち上げが17,833回になり数時間かかります
 - 出力もmbtilesなので `explode_mbtiles.py` でXYZに開きます（MapLibreはHTTP越しにmbtilesを読めないため）
 - **レイヤー名は `unfelt`**。ビューワの `sourceLayer` と一致させる必要があります
+- **軽量エンコーディング（`--enable-fastpfor` / `--enable-fsst`）を有効にしています**。仕様上まだ experimental のため encode.jar では既定オフですが、MapLibre GL JS 6.9.0 で読めることを確認済みです。`MLT_LIGHTWEIGHT=0` で既定設定（Mortonのみ）に戻せます
 
-結果は **17,833枚・134MB（最大275KB）**。MVT 289MB に対し MLT 138MB で **47.8%**（52.2%削減）でした。点数が多いほどMLTが効きます（21万点では66.4%）。
+結果は **17,833枚・89.1MB（最大162KB）**。
+
+| | 合計 | MVT非圧縮から |
+|---|---|---|
+| MVT（非圧縮） | 198.9MB | — |
+| MLT（既定・Mortonのみ） | 140.3MB | −29% |
+| MLT（fastpfor + fsst） | **89.1MB** | **−55%** |
+
+サイズは**タイル実体の合計**（mbtiles の `tile_data` の合計）です。mbtiles の**ファイルサイズで比べてはいけません**。tippecanoe の `--drop-densest-as-needed` は書き直しの跡として SQLite の空きページを大量に残すため、MVT 側のファイルだけが 98MB ぶん膨らんで見えます（`PRAGMA freelist_count` で確認できます）。
+
+なお配信は非圧縮のままです。`Content-Encoding: gzip` を付ければ 89.1MB → 59.1MB になります。MLT 形式自体に圧縮の枠組みはありませんが、HTTP の転送時圧縮はブラウザが解くので使えます。
 
 データの経緯や改訂の履歴は[気象庁の地震カタログ（1919年から現在）の解説](https://www.data.jma.go.jp/eqev/data/bulletin/data/hypo/relocate.html)にまとまっています。震源決定方法・走時表・マグニチュードの決定方法・震央地域名の付け方が時代によって異なる点は、データを扱ううえで把握しておく必要があります。
 
