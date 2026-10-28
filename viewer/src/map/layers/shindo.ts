@@ -18,12 +18,12 @@ export const shindoLayer: LayerModule = {
   def: {
     key: KEY,
     name: '各観測点の震度',
-    url: pmtilesUrl('jma-earthquake/shindo_convert.pmtiles'),
-    sourceLayer: 'shindo_convert',
+    url: pmtilesUrl('jma-earthquake/shindo_intensity.pmtiles'),
+    sourceLayer: 'shindo_intensity',
     defaultVisible: false,
     defaultOpacity: 1,
     desc:
-      '各震度観測点で観測された震度です。気象庁が地震月報(カタログ編)として公開している震度データから、1919年〜2022年の1,942,347件を収録しています。選択した地震で震度が観測された観測点だけを表示します。'
+      '各震度観測点で観測された震度です。気象庁が地震月報(カタログ編)として公開している震度データから、1919年〜2024年の2,064,679件を収録しています。選択した地震で震度が観測された観測点だけを表示します。'
       + '\n\n'
       + '震度階級は1996年10月に改定されました。それ以前のデータには震度5・6に強弱の区別がないため、凡例では「（旧階級）」と表記して現在の震度5弱・5強・6弱・6強と区別しています。同じ色で塗っていても意味が異なる点にご注意ください。'
       + '\n\n'

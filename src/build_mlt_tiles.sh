@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # 震源CSVから MLT（MapLibre Tile）タイルを作る。
 #
-#   bash src/build_mlt_tiles.sh work/hypocenter_convert.csv work/mlt
+#   bash src/build_mlt_tiles.sh work/shindo_hypocenter.csv work/mlt-shindo-hypocenter
 #
 # MLTには MVT を経由する。参考実装の Encode CLI が MVT を入力に取るトランスコーダで、
 # タイル自体は作れないため。
@@ -19,8 +19,8 @@
 #   → java/mlt-cli/build/libs/encode.jar
 set -e
 
-CSV=${1:?使い方: bash src/build_mlt_tiles.sh <hypocenter_convert.csv> <出力ディレクトリ>}
-OUT=${2:?使い方: bash src/build_mlt_tiles.sh <hypocenter_convert.csv> <出力ディレクトリ>}
+CSV=${1:?使い方: bash src/build_mlt_tiles.sh <shindo_hypocenter.csv> <出力ディレクトリ>}
+OUT=${2:?使い方: bash src/build_mlt_tiles.sh <shindo_hypocenter.csv> <出力ディレクトリ>}
 JAR=${MLT_ENCODE_JAR:-$HOME/mlt-spec/java/mlt-cli/build/libs/encode.jar}
 MINZOOM=${MINZOOM:-0}
 MAXZOOM=${MAXZOOM:-8}
@@ -29,14 +29,20 @@ MAXZOOM=${MAXZOOM:-8}
 
 mkdir -p "$OUT"
 # tippecanoe はファイル名を source-layer 名にする（2.x の -l はGLOBALフラグのため使わない）
-GEOJSON="$OUT/hypocenter.geojson"
+GEOJSON="$OUT/shindo_hypocenter.geojson"
 
-echo "=== 1. CSV → GeoJSONSeq ==="
+echo "=== 1. CSV → GeoJSONSeq（7列）==="
+# 属性はビューワ（viewer/src/map/layers/hypocenter.ts）が使う7つに絞り、列名を短くする。
+# 無感（build_unfelt_mlt_tiles.sh）と揃えて 深さ(km)→深さ、マグニチュード1→マグニチュード。
+# 全13列を載せると MLT が 133MB まで太る。
 # 深さとマグニチュードは --float にする。整数値のまま出すとMVT内でINT/DOUBLEが
 # 混在し、MLTエンコーダが型エラーで止まる。
 python3 src/csv2geojsonseq.py "$CSV" "$GEOJSON" \
   --lon Longitude --lat Latitude \
-  --float '深さ(km)' --float 'マグニチュード1'
+  --keep 地震ID --keep DateTime --keep 震央地名 --keep 最大震度 --keep 観測点数 \
+  --keep '深さ(km)' --keep 'マグニチュード1' \
+  --float '深さ(km)' --float 'マグニチュード1' \
+  --rename '深さ(km)=深さ' --rename 'マグニチュード1=マグニチュード'
 
 echo "=== 2. GeoJSONSeq → MVT（tippecanoe）==="
 # 震源は点の密度そのものが情報なので間引いてはいけない。READMEのPMTiles生成と同条件。

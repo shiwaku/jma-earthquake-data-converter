@@ -1,6 +1,6 @@
 """変換済みCSVを行区切りGeoJSON（GeoJSONSeq）へ変換する。tippecanoeの入力用。
 
-  python src/csv2geojsonseq.py shindo_convert.csv shindo_convert.geojsonl \
+  python src/csv2geojsonseq.py shindo_intensity.csv shindo_intensity.geojsonl \
       --lon 観測点経度 --lat 観測点緯度 --number 震度（計測値）
 
 1行1フィーチャで書き出すためメモリに全件を載せない。

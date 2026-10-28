@@ -11,10 +11,10 @@ on:
         description: '取得終了年（空なら配信されている最新年）'
         required: false
         default: ''
-      publish_release:
-        description: '成果物をReleasesに公開する'
-        type: boolean
-        default: true
+      release_tag:
+        description: '成果物を公開するリリースのタグ（例: data-v2）。空なら公開しない'
+        required: false
+        default: ''
 
 env:
   TIPPECANOE_VERSION: '2.79.0'
@@ -73,13 +73,17 @@ jobs:
             python ../src/shindo_zip_dl.py --start "$START_YEAR"
           fi
 
+      - name: 震源データを取得
+        working-directory: work
+        run: python ../src/hypo_zip_dl.py
+
       - name: zipを展開
         working-directory: work
         run: |
-          mkdir -p dat
-          unzip -o -q 'zip/i*.zip' -d dat
-          unzip -o -q zip/code_p.zip -d .
-          echo "展開: $(ls dat | wc -l)ファイル"
+          mkdir -p shindo_dat
+          unzip -o -q 'shindo_zip/i*.zip' -d shindo_dat
+          unzip -o -q shindo_zip/code_p.zip -d .
+          echo "展開: $(ls shindo_dat | wc -l)ファイル"
 
       - name: 観測点一覧を変換
         working-directory: work
@@ -97,36 +101,41 @@ jobs:
         working-directory: work
         run: python ../src/shindo_converter.py
 
+      - name: 震源データ（無感含む）を変換
+        working-directory: work
+        run: python ../src/hypo_dat_converter.py hypo_zip hypo_catalog.csv
+
       # ogr2ogrのParquetドライバはUbuntuのgdal-binに含まれない場合があるためgeopandasを使う
       - name: GeoParquetへ変換
         working-directory: work
         run: |
-          python ../src/csv2geoparquet.py hypocenter_convert.csv hypocenter_convert.parquet --lon Longitude --lat Latitude
-          python ../src/csv2geoparquet.py shindo_convert.csv shindo_convert.parquet --lon 観測点経度 --lat 観測点緯度
+          python ../src/csv2geoparquet.py shindo_hypocenter.csv shindo_hypocenter.parquet --lon Longitude --lat Latitude --string 地震ID
+          python ../src/csv2geoparquet.py shindo_intensity.csv shindo_intensity.parquet --lon 観測点経度 --lat 観測点緯度 --string 地震ID --string 観測点番号
+          python ../src/csv2geoparquet.py hypo_catalog.csv hypo_catalog.parquet --lon Longitude --lat Latitude --string 地震ID
 
       # tippecanoeの入力にする。地震IDは文字列のまま出す必要がある（ビューワが文字列で比較するため）
       - name: 行区切りGeoJSONへ変換
         working-directory: work
         run: |
-          python ../src/csv2geojsonseq.py hypocenter_convert.csv hypocenter_convert.geojsonl --lon Longitude --lat Latitude --number '深さ(km)' --number マグニチュード1 --number マグニチュード2 --number 観測点数 --number UnixTime
-          python ../src/csv2geojsonseq.py shindo_convert.csv shindo_convert.geojsonl --lon 観測点経度 --lat 観測点緯度 --number '震度（計測値）'
+          python ../src/csv2geojsonseq.py shindo_hypocenter.csv shindo_hypocenter.geojsonl --lon Longitude --lat Latitude --number '深さ(km)' --number マグニチュード1 --number マグニチュード2 --number 観測点数 --number UnixTime
+          python ../src/csv2geojsonseq.py shindo_intensity.csv shindo_intensity.geojsonl --lon 観測点経度 --lat 観測点緯度 --number '震度（計測値）'
 
       # -l でレイヤー名を明示する。ビューワの source-layer と一致させる必要がある
       - name: PMTilesへ変換
         working-directory: work
         run: |
           set -euo pipefail
-          tippecanoe -zg -o hypocenter_convert.pmtiles -l hypocenter_convert -r1 -pf -pk -P --force hypocenter_convert.geojsonl
-          tippecanoe -zg -B7 -rg -o shindo_convert.pmtiles -l shindo_convert -r1 -d8 -pf -pk -P --force shindo_convert.geojsonl
+          tippecanoe -zg -o shindo_hypocenter.pmtiles -l shindo_hypocenter -r1 -pf -pk -P --force shindo_hypocenter.geojsonl
+          tippecanoe -zg -B7 -rg -o shindo_intensity.pmtiles -l shindo_intensity -r1 -d8 -pf -pk -P --force shindo_intensity.geojsonl
 
       - name: 成果物を確認
         working-directory: work
         run: |
-          ls -lh hypocenter_convert.csv shindo_convert.csv hypocenter_convert.parquet shindo_convert.parquet hypocenter_convert.pmtiles shindo_convert.pmtiles
+          ls -lh shindo_hypocenter.csv shindo_intensity.csv hypo_catalog.csv *.parquet *.pmtiles
           python - <<'PY'
           import csv
           import sys
-          for path in ('hypocenter_convert.csv', 'shindo_convert.csv'):
+          for path in ('shindo_hypocenter.csv', 'shindo_intensity.csv', 'hypo_catalog.csv'):
               with open(path, encoding='utf-8', newline='') as file:
                   rows = sum(1 for _ in csv.DictReader(file))
               print(f'{path}: {rows}行')
@@ -150,14 +159,23 @@ jobs:
             echo '更新なし'
           fi
 
+      # CSVはgzipで固める。shindo_intensity.csv（約216MB）はリリースアセットには置けるが重いため
       - name: Releasesに公開
-        if: inputs.publish_release
+        if: inputs.release_tag != ''
+        working-directory: work
         env:
           GH_TOKEN: ${{ github.token }}
+          TAG: ${{ inputs.release_tag }}
         run: |
           set -euo pipefail
-          tag="data-$(date -u '+%Y%m%d')"
-          if ! gh release view "$tag" >/dev/null 2>&1; then
-            gh release create "$tag" --title "変換済みデータ ${tag}" --notes "気象庁 地震月報(カタログ編) 震度データの変換結果。生成: $(date -u '+%Y-%m-%d %H:%M UTC')"
+          mkdir -p release
+          for name in shindo_hypocenter shindo_intensity hypo_catalog; do
+            gzip -9 -n -c "$name.csv" > "release/$name.csv.gz"
+            cp "$name.parquet" release/
+          done
+          cp shindo_hypocenter.pmtiles shindo_intensity.pmtiles release/
+          (cd release && sha256sum *.csv.gz *.parquet *.pmtiles > SHA256SUMS.txt)
+          if ! gh release view "$TAG" >/dev/null 2>&1; then
+            gh release create "$TAG" --title "変換済みデータ ${TAG}" --notes "気象庁 地震月報(カタログ編) 震度データ・震源データの変換結果。生成: $(date -u '+%Y-%m-%d %H:%M UTC')"
           fi
-          gh release upload "$tag" --clobber work/hypocenter_convert.csv work/shindo_convert.csv work/hypocenter_convert.parquet work/shindo_convert.parquet work/hypocenter_convert.pmtiles work/shindo_convert.pmtiles
+          gh release upload "$TAG" --clobber release/*

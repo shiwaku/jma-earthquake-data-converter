@@ -2,10 +2,10 @@ import pandas as pd
 import numpy as np
 
 # 入力CSVファイル名
-input_csv_file = "hypocenter.csv"
+input_csv_file = "shindo_hypocenter_raw.csv"
 
 # 出力CSVファイル名
-output_csv_file = "hypocenter_convert.csv"
+output_csv_file = "shindo_hypocenter.csv"
 
 # CSVファイルを読み込み
 df = pd.read_csv(input_csv_file, encoding='shift_jis', dtype=str)

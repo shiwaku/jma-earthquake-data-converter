@@ -43,7 +43,7 @@ jobs:
         run: |
           set -euo pipefail
           {
-            echo '気象庁の震度データ配信内容に変更を検知しました。'
+            echo '気象庁の震度データ・震源データの配信内容に変更を検知しました。'
             echo
             cat jma_update_report.md
             echo
@@ -61,6 +61,6 @@ jobs:
             gh issue comment "$existing" --body-file issue_body.md
             echo "既存Issue #${existing} にコメントしました"
           else
-            gh issue create --title '気象庁の震度データが更新されました' \
+            gh issue create --title '気象庁の震度データ・震源データが更新されました' \
               --label jma-update --body-file issue_body.md
           fi

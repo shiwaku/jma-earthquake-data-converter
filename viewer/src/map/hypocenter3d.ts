@@ -27,8 +27,8 @@ import type { AppStore, Selection } from '../state'
  * どちらもレイヤーを非表示にするとソースごと外れ、点群からも消える。
  */
 const SOURCES: [string, string][] = [
-  ['hypocenter', 'hypocenter'],
-  ['unfelt', 'unfelt'],
+  ['hypocenter', 'shindo_hypocenter'],
+  ['unfelt', 'hypo_unfelt'],
 ]
 
 interface Point3D {

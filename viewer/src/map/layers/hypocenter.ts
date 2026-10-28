@@ -26,14 +26,14 @@ export const hypocenterLayer: LayerModule = {
     name: '震源（有感のみ）',
     // 震源はMLTで配信する。3Dの点群も同じソースを使うので取得は1系統で済む。
     format: 'mlt',
-    url: mltTileUrl('jma-earthquake'),
+    url: mltTileUrl('jma-earthquake/shindo-hypocenter'),
     minzoom: 0,
     maxzoom: 8,
-    sourceLayer: 'hypocenter',
+    sourceLayer: 'shindo_hypocenter',
     defaultVisible: false,
     defaultOpacity: 1,
     desc:
-      '気象庁が決定した地震の震源です。地震月報(カタログ編)の震度データに含まれる1919年〜2022年の214,763件を収録しています。選択した地震の震源を×印で表示します。'
+      '気象庁が決定した地震の震源です。地震月報(カタログ編)の震度データに含まれる1919年〜2024年の221,005件を収録しています。選択した地震の震源を×印で表示します。'
       + '\n\n'
       + 'ここでいう有感地震とは、いずれかの観測点で震度が観測された地震のことです。震度が観測されなかった地震は「震源（無感含む）」レイヤーに収録しています。'
       + '\n\n'
