@@ -1,11 +1,17 @@
 """変換済みCSVを点ジオメトリのGeoParquet形式へ変換する。
 
-  python src/csv2geoparquet.py hypocenter_convert.csv hypocenter_convert.parquet \
+  python src/csv2geoparquet.py shindo_hypocenter.csv shindo_hypocenter.parquet \
       --lon Longitude --lat Latitude
 
 座標が欠損している行、および緯度経度がともに0の行は出力から除く。
 気象庁の震度観測点一覧には座標が 0,0 の面的判定用レコード
 （例: 5399999「神戸市等阪神淡路地域」）が含まれるため。
+
+--string で指定した列は数値に推定させず文字列のまま出す。地震ID は発生時刻
+YYYYMMDDhhmmss そのもので、タイルやビューワも文字列として扱うため揃える。
+
+圧縮は zstd（レベル9）。既定の snappy だと震源カタログ（533万件）が230MBになり、
+gzip したCSV（154MB）より大きくなる。zstd-9 で146MB。QGIS 3.34（GDAL 3.9）で読めることを確認済み。
 """
 import argparse
 import sys
@@ -21,13 +27,20 @@ def parse_args():
     parser.add_argument('--lon', required=True, help='経度の列名')
     parser.add_argument('--lat', required=True, help='緯度の列名')
     parser.add_argument('--crs', default='EPSG:4326')
+    parser.add_argument('--compression', default='zstd',
+                        help='Parquetの圧縮方式（既定: zstd）')
+    parser.add_argument('--compression-level', type=int, default=9,
+                        help='圧縮レベル（既定: 9。zstd以外では無視する）')
+    parser.add_argument('--string', action='append', default=[], metavar='COLUMN',
+                        help='文字列のまま出す列（複数指定可）')
     return parser.parse_args()
 
 
 def main():
     args = parse_args()
 
-    df = pd.read_csv(args.input_csv, low_memory=False)
+    df = pd.read_csv(args.input_csv, low_memory=False,
+                     dtype={column: str for column in args.string})
     total = len(df)
     for column in (args.lon, args.lat):
         if column not in df.columns:
@@ -42,7 +55,9 @@ def main():
         df,
         geometry=gpd.points_from_xy(df[args.lon], df[args.lat]),
         crs=args.crs)
-    gdf.to_parquet(args.output_parquet, index=False)
+    level = args.compression_level if args.compression == 'zstd' else None
+    gdf.to_parquet(args.output_parquet, index=False,
+                   compression=args.compression, compression_level=level)
 
     print(f'{args.input_csv} -> {args.output_parquet}')
     print(f'  入力 {total}行 / 出力 {len(gdf)}行'

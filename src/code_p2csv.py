@@ -4,16 +4,17 @@ def convert_degrees(degrees_minutes):
 
 
 def read_text(input_file):
-    # 気象庁の震度観測点一覧は配信時期によりShift-JIS／EUC-JPの両方が存在する
+    # 気象庁の震度観測点一覧は配信時期によりShift-JIS／EUC-JP／UTF-8が存在する
+    # （2026年10月配信分からUTF-8）。UTF-8は判定が厳密なので先に試す
     with open(input_file, 'rb') as file:
         raw = file.read()
-    for encoding in ('shift_jis', 'euc_jp'):
+    for encoding in ('utf-8', 'shift_jis', 'euc_jp'):
         try:
             return raw.decode(encoding)
         except UnicodeDecodeError:
             continue
     raise UnicodeDecodeError(
-        'code_p', raw, 0, len(raw), 'shift_jis/euc_jpのいずれでも復号できません')
+        'code_p', raw, 0, len(raw), 'utf-8/shift_jis/euc_jpのいずれでも復号できません')
 
 
 def convert_txt_to_csv(input_file, output_file):

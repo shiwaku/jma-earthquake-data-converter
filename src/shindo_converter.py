@@ -2,10 +2,10 @@ import pandas as pd
 import numpy as np
 
 # 入力CSVファイル名
-input_csv_file = "shindo.csv"
+input_csv_file = "shindo_intensity_raw.csv"
 
 # 出力CSVファイル名
-output_csv_file = "shindo_convert.csv"
+output_csv_file = "shindo_intensity.csv"
 
 # 観測点情報CSVファイル名
 observation_csv_file = "code_p.csv"

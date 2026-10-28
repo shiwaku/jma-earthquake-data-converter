@@ -3,12 +3,15 @@
 work/
 
 # 変換の中間・最終成果物（作業ディレクトリ外に出力した場合）
-zip/
-dat/
-hypocenter.csv
-shindo.csv
-hypocenter_convert.csv
-shindo_convert.csv
+shindo_zip/
+shindo_dat/
+hypo_zip/
+*.csv.gz
+shindo_hypocenter_raw.csv
+shindo_intensity_raw.csv
+shindo_hypocenter.csv
+shindo_intensity.csv
+hypo_catalog.csv
 *.parquet
 *.fgb
 *.pmtiles

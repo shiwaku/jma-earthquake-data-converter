@@ -1,6 +1,6 @@
 """気象庁の震源データ（h*.dat）を読みやすいCSVへ変換する。
 
-  python src/hypo_dat_converter.py work/hypo work/hypocenter_catalog.csv
+  python src/hypo_dat_converter.py work/hypo_zip work/hypo_catalog.csv
 
 震源データは震度データ（i*.dat）とは別の配信物で、震度が観測されなかった地震
 （無感地震）も含む。
@@ -9,7 +9,7 @@
 どちらも96バイト固定長の「Ｊ」形式で、震源レコードの桁位置は共通。
 仕様: https://www.data.jma.go.jp/eqev/data/bulletin/data/format/fmthyp_j.html
 
-出力は震度データ由来の hypocenter_convert.csv と同じ列名に揃えてある。ただし
+出力は震度データ由来の shindo_hypocenter.csv と同じ列名に揃えてある。ただし
 震源データの震央地名は**英語**である点が異なる（例: E OFF FUKUSHIMA PREF）。
 
 最大震度が空白の行が無感地震。ビューワはこれで有感／無感を分ける。

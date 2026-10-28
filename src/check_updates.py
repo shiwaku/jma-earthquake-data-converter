@@ -1,4 +1,4 @@
-"""気象庁の震度データ配信状況を監視し、前回記録との差分を報告する。
+"""気象庁の震度データ・震源データの配信状況を監視し、前回記録との差分を報告する。
 
 data/jma_manifest.json に記録した各zipのサイズとLast-Modifiedを、
 気象庁サイトの現在の状態と照合する。
@@ -8,6 +8,9 @@ data/jma_manifest.json に記録した各zipのサイズとLast-Modifiedを、
 
 気象庁は年別zipをディレクトリ単位で一括再生成することがあるため、
 新年度の追加だけでなく既存年の差し替えも検知対象とする。
+
+震度データ（i*.zip・code_p.zip）と震源データ（h*.zip）は別々のページで配信され、
+公開時期も異なる（2024年分は震源データが2026-09、震度データが2026-10）。両方を見る。
 """
 import argparse
 import json
@@ -19,6 +22,8 @@ import requests
 
 INDEX_URL = 'https://www.data.jma.go.jp/eqev/data/bulletin/shindo.html'
 BASE_URL = 'https://www.data.jma.go.jp/eqev/data/bulletin/data/shindo/'
+HYPO_INDEX_URL = 'https://www.data.jma.go.jp/eqev/data/bulletin/hypo.html'
+HYPO_BASE_URL = 'https://www.data.jma.go.jp/eqev/data/bulletin/data/hypo/'
 MANIFEST_PATH = os.path.join(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
     'data', 'jma_manifest.json')
@@ -38,11 +43,26 @@ def list_remote_files(session):
     return sorted(unique, key=lambda n: (n != 'code_p.zip', n))
 
 
+def list_hypo_files(session):
+    """震源データの配信ページから年別zipのファイル名を取得する。"""
+    response = session.get(HYPO_INDEX_URL, timeout=60)
+    response.raise_for_status()
+    names = re.findall(r'href="\./data/hypo/(h\d{4}\.zip)"', response.text)
+    if not names:
+        raise RuntimeError('震源データの配信ページからzipのリンクを取得できませんでした')
+    return sorted(set(names))
+
+
+def url_for(name):
+    # h*.zip は震源データ、それ以外（i*.zip・code_p.zip）は震度データ
+    return (HYPO_BASE_URL if name.startswith('h') else BASE_URL) + name
+
+
 def fetch_state(session, names):
     """各zipのサイズとLast-Modifiedを取得する。"""
     state = {}
     for name in names:
-        response = session.head(BASE_URL + name, timeout=60)
+        response = session.head(url_for(name), timeout=60)
         response.raise_for_status()
         state[name] = {
             'size': response.headers.get('Content-Length'),
@@ -60,7 +80,7 @@ def load_manifest():
 
 def save_manifest(state):
     payload = {
-        'source': INDEX_URL,
+        'source': [INDEX_URL, HYPO_INDEX_URL],
         'note': 'src/check_updates.py が生成・更新する。手で編集しない。',
         'files': state,
     }
@@ -118,7 +138,7 @@ def main():
     args = parser.parse_args()
 
     session = requests.Session()
-    names = list_remote_files(session)
+    names = list_remote_files(session) + list_hypo_files(session)
     current = fetch_state(session, names)
     previous = load_manifest()
 

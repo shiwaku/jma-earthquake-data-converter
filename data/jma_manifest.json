@@ -1,10 +1,13 @@
 {
-  "source": "https://www.data.jma.go.jp/eqev/data/bulletin/shindo.html",
+  "source": [
+    "https://www.data.jma.go.jp/eqev/data/bulletin/shindo.html",
+    "https://www.data.jma.go.jp/eqev/data/bulletin/hypo.html"
+  ],
   "note": "src/check_updates.py が生成・更新する。手で編集しない。",
   "files": {
     "code_p.zip": {
-      "size": "111775",
-      "last_modified": "Wed, 03 Dec 2025 07:00:52 GMT"
+      "size": "118682",
+      "last_modified": "Tue, 06 Oct 2026 06:36:02 GMT"
     },
     "i1919.zip": {
       "size": "15293",
@@ -421,6 +424,194 @@
     "i2022.zip": {
       "size": "1610432",
       "last_modified": "Tue, 28 Oct 2025 02:20:35 GMT"
+    },
+    "i2023.zip": {
+      "size": "1181576",
+      "last_modified": "Sun, 04 Oct 2026 18:16:22 GMT"
+    },
+    "i2024.zip": {
+      "size": "2082757",
+      "last_modified": "Sun, 04 Oct 2026 18:16:16 GMT"
+    },
+    "h1919.zip": {
+      "size": "799597",
+      "last_modified": "Mon, 20 Oct 2025 05:31:04 GMT"
+    },
+    "h1951.zip": {
+      "size": "352141",
+      "last_modified": "Fri, 19 Aug 2016 03:48:26 GMT"
+    },
+    "h1961.zip": {
+      "size": "400833",
+      "last_modified": "Fri, 19 Aug 2016 03:49:32 GMT"
+    },
+    "h1967.zip": {
+      "size": "1114718",
+      "last_modified": "Thu, 03 Mar 2022 10:24:29 GMT"
+    },
+    "h1983.zip": {
+      "size": "158157",
+      "last_modified": "Fri, 19 Aug 2016 03:47:57 GMT"
+    },
+    "h1984.zip": {
+      "size": "116739",
+      "last_modified": "Fri, 19 Aug 2016 03:48:58 GMT"
+    },
+    "h1985.zip": {
+      "size": "156996",
+      "last_modified": "Fri, 19 Aug 2016 03:48:43 GMT"
+    },
+    "h1986.zip": {
+      "size": "190285",
+      "last_modified": "Fri, 19 Aug 2016 03:48:39 GMT"
+    },
+    "h1987.zip": {
+      "size": "245940",
+      "last_modified": "Fri, 19 Aug 2016 03:48:01 GMT"
+    },
+    "h1988.zip": {
+      "size": "380335",
+      "last_modified": "Fri, 19 Aug 2016 03:48:01 GMT"
+    },
+    "h1989.zip": {
+      "size": "368601",
+      "last_modified": "Fri, 19 Aug 2016 03:48:03 GMT"
+    },
+    "h1990.zip": {
+      "size": "342370",
+      "last_modified": "Fri, 19 Aug 2016 03:49:36 GMT"
+    },
+    "h1991.zip": {
+      "size": "334578",
+      "last_modified": "Fri, 19 Aug 2016 03:50:14 GMT"
+    },
+    "h1992.zip": {
+      "size": "444044",
+      "last_modified": "Fri, 19 Aug 2016 03:49:02 GMT"
+    },
+    "h1993.zip": {
+      "size": "652572",
+      "last_modified": "Fri, 19 Aug 2016 03:49:29 GMT"
+    },
+    "h1994.zip": {
+      "size": "755738",
+      "last_modified": "Fri, 19 Aug 2016 03:47:58 GMT"
+    },
+    "h1995.zip": {
+      "size": "1528535",
+      "last_modified": "Fri, 19 Aug 2016 03:48:54 GMT"
+    },
+    "h1996.zip": {
+      "size": "1341515",
+      "last_modified": "Fri, 19 Aug 2016 03:47:57 GMT"
+    },
+    "h1998.zip": {
+      "size": "2153080",
+      "last_modified": "Fri, 19 Aug 2016 03:49:45 GMT"
+    },
+    "h1999.zip": {
+      "size": "2019749",
+      "last_modified": "Fri, 19 Aug 2016 03:48:32 GMT"
+    },
+    "h2000.zip": {
+      "size": "2892423",
+      "last_modified": "Fri, 19 Aug 2016 03:48:19 GMT"
+    },
+    "h2001.zip": {
+      "size": "3250829",
+      "last_modified": "Fri, 19 Aug 2016 03:49:54 GMT"
+    },
+    "h2002.zip": {
+      "size": "3498623",
+      "last_modified": "Tue, 21 Mar 2017 06:19:42 GMT"
+    },
+    "h2003.zip": {
+      "size": "3901001",
+      "last_modified": "Thu, 09 Jan 2025 06:09:49 GMT"
+    },
+    "h2004.zip": {
+      "size": "3687416",
+      "last_modified": "Thu, 09 Jan 2025 06:10:17 GMT"
+    },
+    "h2005.zip": {
+      "size": "3632542",
+      "last_modified": "Fri, 19 Aug 2016 03:50:12 GMT"
+    },
+    "h2006.zip": {
+      "size": "3183976",
+      "last_modified": "Fri, 19 Aug 2016 03:49:51 GMT"
+    },
+    "h2007.zip": {
+      "size": "3488351",
+      "last_modified": "Fri, 19 Aug 2016 03:49:59 GMT"
+    },
+    "h2008.zip": {
+      "size": "3535259",
+      "last_modified": "Fri, 19 Aug 2016 03:48:10 GMT"
+    },
+    "h2009.zip": {
+      "size": "3802556",
+      "last_modified": "Fri, 19 Aug 2016 03:48:37 GMT"
+    },
+    "h2010.zip": {
+      "size": "3688946",
+      "last_modified": "Fri, 19 Aug 2016 03:49:34 GMT"
+    },
+    "h2011.zip": {
+      "size": "7955061",
+      "last_modified": "Thu, 09 Jan 2025 06:10:38 GMT"
+    },
+    "h2012.zip": {
+      "size": "4874001",
+      "last_modified": "Wed, 31 Jan 2018 01:20:31 GMT"
+    },
+    "h2013.zip": {
+      "size": "3888296",
+      "last_modified": "Wed, 31 Jan 2018 01:20:31 GMT"
+    },
+    "h2014.zip": {
+      "size": "3803135",
+      "last_modified": "Fri, 19 Aug 2016 03:50:05 GMT"
+    },
+    "h2015.zip": {
+      "size": "3384915",
+      "last_modified": "Wed, 31 Jan 2018 01:20:31 GMT"
+    },
+    "h2016.zip": {
+      "size": "8221979",
+      "last_modified": "Thu, 01 Apr 2021 07:44:08 GMT"
+    },
+    "h2017.zip": {
+      "size": "7907333",
+      "last_modified": "Thu, 01 Apr 2021 07:44:09 GMT"
+    },
+    "h2018.zip": {
+      "size": "6973661",
+      "last_modified": "Thu, 01 Apr 2021 07:44:09 GMT"
+    },
+    "h2019.zip": {
+      "size": "6114956",
+      "last_modified": "Thu, 14 Oct 2021 09:36:06 GMT"
+    },
+    "h2020.zip": {
+      "size": "6902549",
+      "last_modified": "Thu, 10 Nov 2022 05:29:54 GMT"
+    },
+    "h2021.zip": {
+      "size": "7225450",
+      "last_modified": "Fri, 14 Apr 2023 04:48:48 GMT"
+    },
+    "h2022.zip": {
+      "size": "7796417",
+      "last_modified": "Mon, 20 Oct 2025 04:52:03 GMT"
+    },
+    "h2023.zip": {
+      "size": "6977812",
+      "last_modified": "Wed, 10 Dec 2025 01:41:53 GMT"
+    },
+    "h2024.zip": {
+      "size": "8197026",
+      "last_modified": "Thu, 03 Sep 2026 01:45:34 GMT"
     }
   }
 }

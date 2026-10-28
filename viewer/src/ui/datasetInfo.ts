@@ -7,12 +7,12 @@ import { LAYERS } from '../map/layers/registry'
  *
  * 表示しているレイヤーに合わせて中身を変える。地震の検索索引（events.json）は
  * 有感地震しか持たないため、震源（有感のみ）か各観測点の震度が有効なときだけ
- * その要約を出す。無感震源だけを出しているときに「選べる地震 15,480件」と
+ * その要約を出す。無感震源だけを出しているときに「選べる地震 16,128件」と
  * 書くと、画面に出ていないデータの説明になってしまう。
  */
 
 /** 無感震源の収録件数。src/hypo_dat_converter.py の出力を数えた値。 */
-const UNFELT_ROWS = '4,938,455件（1919〜2023年）'
+const UNFELT_ROWS = '5,185,712件（1919〜2024年）'
 
 const hasKey = (key: string): boolean => LAYERS.some((m) => m.def.key === key)
 

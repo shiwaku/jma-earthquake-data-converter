@@ -1,6 +1,6 @@
 # jma-earthquake-data-converter
 
-気象庁 [地震月報(カタログ編)](https://www.data.jma.go.jp/eqev/data/bulletin/shindo.html) の震源データ（1919〜2023年）と震度データ（1919〜2022年）を、そのままでは扱えない固定長テキストから GIS データ（CSV / GeoParquet / PMTiles / MLT）へ変換し、地図で見られるようにします。震源は深さ方向に配置して立体表示できます。
+気象庁 [地震月報(カタログ編)](https://www.data.jma.go.jp/eqev/data/bulletin/shindo.html) の震源データと震度データ（いずれも1919〜2024年）を、そのままでは扱えない固定長テキストから GIS データ（CSV / GeoParquet / PMTiles / MLT）へ変換し、地図で見られるようにします。震源は深さ方向に配置して立体表示できます。
 
 [![Demo](https://img.shields.io/badge/demo-震源マップ-2a78d6)](https://shiwaku.github.io/jma-earthquake-data-converter/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
@@ -10,14 +10,24 @@
 
 | | 件数 | 期間 |
 |---|---:|---|
-| 震源（有感） | 214,763 | 1919〜2022年 |
-| 震度（観測点ごと） | 1,942,347 | 1919〜2022年 |
-| 震度観測点 | 7,239 | — |
-| **震源（無感）** | **4,938,455** | **1919〜2023年** |
+| 震源（有感） | 221,005 | 1919〜2024年 |
+| 震度（観測点ごと） | 2,064,679 | 1919〜2024年 |
+| 震度観測点 | 7,258 | — |
+| **震源（無感）** | **5,192,036** | **1919〜2024年** |
 
 震度データ由来の**有感地震**に加えて、震源データ由来の**無感地震**（震度が観測されなかった地震）も収録しています。両者は別レイヤーです。詳しくは[元データ](#元データ--気象庁の2つの配信物)を参照してください。
 
-リポジトリに含まれる [`data/code_p.csv`](data/code_p.csv) は7,087観測点の古いスナップショットです。最新にするには `shindo_zip_dl.py` と `code_p2csv.py` を実行してください。
+変換済みの CSV・GeoParquet・PMTiles は [GitHub Releases](../../releases/latest) で配布しています（[配布データ](#配布データgithub-releases)）。
+
+ファイル名は**どちらの配信物から作ったか**で分けています。震度データ（`i*.dat`）由来は `shindo_`、震源データ（`h*.dat`）由来は `hypo_` で始まります。
+
+| ファイル名 | 由来 | 中身 |
+|---|---|---|
+| `shindo_hypocenter.*` | 震度データ `i*.dat` | 震源（有感） |
+| `shindo_intensity.*` | 震度データ `i*.dat` | 観測点ごとの震度 |
+| `hypo_catalog.*` | 震源データ `h*.dat` | 震源（有感・無感とも） |
+
+リポジトリに含まれる [`data/code_p.csv`](data/code_p.csv) は2026年10月配信の7,258観測点です。
 
 ビューワは現在、**震源（無感含む）のみ**を表示しています。地震を選んで震度分布を見る機能は実装済みですが、レイヤーごとオフにしてあります（[ビューワ](#ビューワviewer)を参照）。
 
@@ -30,11 +40,12 @@
 
 | | [震度データ](https://www.data.jma.go.jp/eqev/data/bulletin/shindo.html) | [震源データ](https://www.data.jma.go.jp/eqev/data/bulletin/hypo.html) |
 |---|---|---|
-| ファイル | `i2022.zip` → `i2022.dat` | `h2022.zip` → `h2022.dat` |
+| ファイル | `i2024.zip` → `i2024.dat` | `h2024.zip` → `h2024.dat` |
 | 正式名称 | 震度・加速度値ファイル | 震源ファイル |
 | レコード長 | 96 Byte 固定長 | 96 Byte 固定長 |
 | 1地震の構成 | **震源レコード（1件以上）＋ 震度・加速度レコード（1件以上）** | **震源レコード（1行）のみ** |
-| 収録期間 | 1919〜2022年 | 1919〜2023年 |
+| 収録期間 | 1919〜2024年 | 1919〜2024年 |
+| 文字コード | 2022年まで Shift-JIS、2023年から **EUC-JP** | ASCII（震央地名が英語） |
 | フォーマット仕様 | [txt](https://www.data.jma.go.jp/eqev/data/bulletin/data/shindo/format_j.txt) / [pdf](https://www.data.jma.go.jp/svd/eqev/data/bulletin/data/shindo/format_j.pdf)（[リポジトリ内のコピー](document/)） | [震源ファイルフォーマット](https://www.data.jma.go.jp/eqev/data/bulletin/data/format/fmthyp_j.html) |
 | 本リポジトリ | **使用**（有感地震・震度） | **使用**（無感地震） |
 
@@ -53,49 +64,50 @@
 
 | 出力 | 由来 | 件数 | 震央地名 |
 |---|---|---:|---|
-| `hypocenter_convert.csv` | 震度データ `i*.dat` の震源レコード | 214,763 | 和名 |
-| `hypocenter_catalog.csv` | 震源データ `h*.dat` | 5,077,137 | **英語** |
+| `shindo_hypocenter.csv` | 震度データ `i*.dat` の震源レコード | 221,005 | 和名 |
+| `hypo_catalog.csv` | 震源データ `h*.dat` | 5,326,333 | **英語** |
 
 同じ96Bの震源レコード形式で、地震IDの作り方も共通です（実データで先頭レコードの一致を確認済み）。違うのは収録範囲と震央地名の表記です。
 
-震度データは構成上「震度・加速度レコードを1件以上持つ」ことが前提なので（1960年12月31日までを除く）、**震度が1点も観測されなかった地震は震度データに載りません**。実データでも、**震度データ内部**の震源レコードと震度レコードの地震IDは208,552個で完全に一致し、片方にしか無いIDは0件でした。
+震度データは構成上「震度・加速度レコードを1件以上持つ」ことが前提なので（1960年12月31日までを除く）、**震度が1点も観測されなかった地震は震度データに載りません**。実データでも、**震度データ内部**の震源レコードと震度レコードの地震IDは214,794個で完全に一致し、片方にしか無いIDは0件でした。
 
 > [!WARNING]
-> **震度データと震源データのあいだでは、地震IDが約半数一致しません。** 震度データ由来の208,552個のうち100,298個（48.1%）が震源カタログに見つかりません。
+> **震度データと震源データのあいだでは、地震IDが約半数一致しません。** 震度データ由来の214,794個のうち102,079個（47.5%）が震源カタログに見つかりません。
 >
-> 原因は2つあります。約半分は**1966年の松代群発地震**で、有感地震が多発した一方で個々の震源が決定されていないためです（1966年だけで41,899件。同じ「年月日時分」に震源が存在するのは2.2%のみ）。残りは**秒の精度差**で、一致しないIDの78.2%が秒=00です。古い記録では震度データ側の発生時刻が分単位までしかなく、震源カタログは実際の秒を持つため、秒まで含めたIDでは一致しません。
+> 原因は2つあります。約半分は**1966年の松代群発地震**で、有感地震が多発した一方で個々の震源が決定されていないためです（1966年だけで41,899件。同じ「年月日時分」に震源が存在するのは2.2%のみ）。残りは**秒の精度差**で、一致しないIDの76.8%が秒=00です。古い記録では震度データ側の発生時刻が分単位までしかなく、震源カタログは実際の秒を持つため、秒まで含めたIDでは一致しません。
 >
 > 両者を突き合わせて使う場合は注意が必要です。
 
-実測で裏づけが取れました。2022年分で比べると、震度データの震源レコードが **1,937件**、震源データが **291,010件** です。震源データ全体（1919〜2023年）では **5,077,137件**あり、うち最大震度を持つのは 132,075件、残る **4,945,062件が無感**でした。
+実測で裏づけが取れました。2022年分で比べると、震度データの震源レコードが **1,937件**、震源データが **291,010件** です。震源データ全体（1919〜2024年）では **5,326,333件**あり、うち最大震度を持つのは 134,297件、残る **5,192,036件が無感**でした。
 
 ### 震源データの変換
 
 ```
-python src/hypo_dat_converter.py work/hypo work/hypocenter_catalog.csv
+python src/hypo_zip_dl.py
+python src/hypo_dat_converter.py hypo_zip hypo_catalog.csv
 ```
 
-`h*.zip` を置いたディレクトリを渡すと、96B固定長のJ形式を解いてCSVにします。出力の列名は `hypocenter_convert.csv` に揃えてあります。最大震度が空欄の行が無感地震です。
+`hypo_zip_dl.py` が配信ページから `h*.zip` を全年ぶん `hypo_zip/` に落とします。`hypo_dat_converter.py` はそのディレクトリを受け取り、96B固定長のJ形式を解いてCSVにします。出力の列名は `shindo_hypocenter.csv` に揃えてあります。最大震度が空欄の行が無感地震です。
 
 タイルは件数が桁違いなので、間引きと一括変換が要ります。CSVからタイルまで1本で通せます。
 
 ```bash
-bash src/build_unfelt_mlt_tiles.sh work/hypocenter_catalog.csv work/mlt-unfelt
+bash src/build_unfelt_mlt_tiles.sh work/hypo_catalog.csv work/mlt-hypo-unfelt
 ```
 
 中でやっていること:
 
 ```bash
 # 1. 無感のみ・5列に絞ってGeoJSONSeqへ
-python3 src/csv2geojsonseq.py work/hypocenter_catalog.csv work/mlt-unfelt/unfelt.geojson   --lon Longitude --lat Latitude --where-empty 最大震度   --keep 地震ID --keep DateTime --keep 震央地名 --keep '深さ(km)' --keep 'マグニチュード1'   --float '深さ(km)' --float 'マグニチュード1'   --rename '深さ(km)=深さ' --rename 'マグニチュード1=マグニチュード'
+python3 src/csv2geojsonseq.py work/hypo_catalog.csv work/mlt-hypo-unfelt/hypo_unfelt.geojson   --lon Longitude --lat Latitude --where-empty 最大震度   --keep 地震ID --keep DateTime --keep 震央地名 --keep '深さ(km)' --keep 'マグニチュード1'   --float '深さ(km)' --float 'マグニチュード1'   --rename '深さ(km)=深さ' --rename 'マグニチュード1=マグニチュード'
 
 # 2〜4.
-tippecanoe --no-tile-compression -Z0 -z10 -l unfelt --drop-densest-as-needed -o unfelt.mbtiles unfelt.geojson
-java -jar encode.jar --mbtiles unfelt.mbtiles --dir mlt
-python src/explode_mbtiles.py mlt/unfelt.mlt.mbtiles -o tiles --ext mlt
+tippecanoe --no-tile-compression -Z0 -z10 -l hypo_unfelt --drop-densest-as-needed -o hypo_unfelt.mbtiles hypo_unfelt.geojson
+java -jar encode.jar --mbtiles hypo_unfelt.mbtiles --dir mlt --enable-fastpfor --enable-fsst
+python src/explode_mbtiles.py mlt/hypo_unfelt.mlt.mbtiles -o tiles --ext mlt
 ```
 
-- **`最大震度` が空の行が無感地震です**。カタログ5,077,137件のうち4,938,455件がこれにあたります
+- **`最大震度` が空の行が無感地震です**。カタログ5,326,333件のうち5,192,036件がこれにあたり、座標のある5,185,712件をタイルにします
 - **属性は5つに絞ります**。`地震ID` `DateTime` `震央地名` `深さ` `マグニチュード`。全13列を載せるとタイルが太るうえ、無感の行では最大震度・観測点数・震源決定フラグに見せるものがありません
 - **列名を短くします**。`深さ(km)` → `深さ`、`マグニチュード1` → `マグニチュード`。ビューワはどちらの名前でも読みますが（`viewer/src/map/layers/unfelt.ts`）、配信中のタイルはこの短いほうです
 - **間引きます**（`--drop-densest-as-needed`）。有感（21万点）と違い、間引かないと1タイルが数百MBになります
@@ -111,10 +123,12 @@ python src/explode_mbtiles.py mlt/unfelt.mlt.mbtiles -o tiles --ext mlt
 > 疎な場所は素通しで、密な場所だけが削られます。低ズームではさらに強く効き、東京周辺の1度四方で数えると z3で107点・z5で156点・z7で898点・z10で13,194点でした。**分布の形を見るには十分ですが、点の数を数える用途には使えません。**
 - **`encode.jar` は `--mbtiles` で一括変換します**。タイルごとに起動するとJVMの立ち上げが17,833回になり数時間かかります
 - 出力もmbtilesなので `explode_mbtiles.py` でXYZに開きます（MapLibreはHTTP越しにmbtilesを読めないため）
-- **レイヤー名は `unfelt`**。ビューワの `sourceLayer` と一致させる必要があります
+- **レイヤー名は `hypo_unfelt`**。ビューワの `sourceLayer` と一致させる必要があります
 - **軽量エンコーディング（`--enable-fastpfor` / `--enable-fsst`）を有効にしています**。仕様上まだ experimental のため encode.jar では既定オフですが、MapLibre GL JS 6.9.0 で読めることを確認済みです。`MLT_LIGHTWEIGHT=0` で既定設定（Mortonのみ）に戻せます
 
-結果は **17,833枚・89.1MB（最大162KB）**。
+結果は **17,556枚・91.1MB（最大169KB）**（1919〜2024年・5,185,712件）。
+
+下の内訳は1919〜2023年版（17,833枚）で計測したものです。
 
 | | 合計 | MVT非圧縮から |
 |---|---|---|
@@ -124,7 +138,7 @@ python src/explode_mbtiles.py mlt/unfelt.mlt.mbtiles -o tiles --ext mlt
 
 サイズは**タイル実体の合計**（mbtiles の `tile_data` の合計）です。mbtiles の**ファイルサイズで比べてはいけません**。tippecanoe の `--drop-densest-as-needed` は書き直しの跡として SQLite の空きページを大量に残すため、MVT 側のファイルだけが 98MB ぶん膨らんで見えます（`PRAGMA freelist_count` で確認できます）。
 
-なお配信は非圧縮のままです。`Content-Encoding: gzip` を付ければ 89.1MB → 59.1MB になります。MLT 形式自体に圧縮の枠組みはありませんが、HTTP の転送時圧縮はブラウザが解くので使えます。
+なお配信は非圧縮のままです。1919〜2023年版では `Content-Encoding: gzip` を付けると 89.1MB → 59.1MB になりました。MLT 形式自体に圧縮の枠組みはありませんが、HTTP の転送時圧縮はブラウザが解くので使えます。
 
 データの経緯や改訂の履歴は[気象庁の地震カタログ（1919年から現在）の解説](https://www.data.jma.go.jp/eqev/data/bulletin/data/hypo/relocate.html)にまとまっています。震源決定方法・走時表・マグニチュードの決定方法・震央地域名の付け方が時代によって異なる点は、データを扱ううえで把握しておく必要があります。
 
@@ -132,17 +146,18 @@ python src/explode_mbtiles.py mlt/unfelt.mlt.mbtiles -o tiles --ext mlt
 
 ```mermaid
 flowchart LR
-  JMA["気象庁<br/>地震月報(カタログ編)"] -->|shindo_zip_dl.py| DAT["i*.dat 震度データ<br/>固定長テキスト"]
+  JMA["気象庁<br/>地震月報(カタログ編)"] -->|shindo_zip_dl.py| DAT["shindo_zip/ → shindo_dat/<br/>i*.dat 震度データ"]
   JMA -->|shindo_zip_dl.py| CODEP["code_p.dat<br/>観測点一覧"]
-  JMA --> HDAT["h*.dat 震源データ<br/>固定長テキスト"]
+  JMA -->|hypo_zip_dl.py| HDAT["hypo_zip/<br/>h*.zip 震源データ"]
   CODEP -->|code_p2csv.py| CODECSV["code_p.csv"]
-  DAT -->|dat_converter.py| RAW["hypocenter.csv<br/>shindo.csv"]
-  RAW -->|hypocenter_converter.py| HYPO["hypocenter_convert.csv<br/>21MB / 214,763件"]
-  RAW -->|shindo_converter.py| SHINDO["shindo_convert.csv<br/>203MB / 1,942,347件"]
-  HDAT -->|hypo_dat_converter.py| CAT["hypocenter_catalog.csv<br/>5,077,137件<br/>うち無感 4,938,455件"]
+  DAT -->|dat_converter.py| RAW["shindo_hypocenter_raw.csv<br/>shindo_intensity_raw.csv"]
+  RAW -->|hypocenter_converter.py| HYPO["shindo_hypocenter.csv<br/>22MB / 221,005件"]
+  RAW -->|shindo_converter.py| SHINDO["shindo_intensity.csv<br/>216MB / 2,064,679件"]
+  HDAT -->|hypo_dat_converter.py| CAT["hypo_catalog.csv<br/>555MB / 5,326,333件<br/>うち無感 5,192,036件"]
   CODECSV -.観測点番号で結合.-> SHINDO
   HYPO --> GP["GeoParquet<br/>csv2geoparquet.py"]
   SHINDO --> GP
+  CAT --> GP
   HYPO --> PM["PMTiles<br/>csv2geojsonseq.py → tippecanoe"]
   SHINDO --> PM
   HYPO --> MLT["MLT 有感<br/>build_mlt_tiles.sh"]
@@ -166,60 +181,87 @@ npm run dev
 
 ### データを自分で変換する
 
+作業ディレクトリ（例: `work/`）で実行します。
+
 ```bash
 # 1. ダウンロード（配信ページから最新年を自動判定。--start / --end で範囲指定も可）
-python src/shindo_zip_dl.py
+python ../src/shindo_zip_dl.py   # → shindo_zip/（i*.zip・code_p.zip）
+python ../src/hypo_zip_dl.py     # → hypo_zip/（h*.zip）
 
-# 2. 展開したうえで、震源データ・震度データを抽出
-python src/dat_converter.py
+# 2. 震度データを展開し、震源レコードと震度レコードを抽出
+mkdir -p shindo_dat
+for z in shindo_zip/i*.zip; do unzip -o -q "$z" -d shindo_dat; done
+unzip -o -q shindo_zip/code_p.zip -d .
+python ../src/dat_converter.py   # → shindo_hypocenter_raw.csv・shindo_intensity_raw.csv
 
 # 3. 読みやすい形式へ
-python src/code_p2csv.py
-python src/hypocenter_converter.py
-python src/shindo_converter.py
+python ../src/code_p2csv.py              # → code_p.csv
+python ../src/hypocenter_converter.py    # → shindo_hypocenter.csv
+python ../src/shindo_converter.py        # → shindo_intensity.csv
+python ../src/hypo_dat_converter.py hypo_zip hypo_catalog.csv
 ```
 
 各スクリプトの詳細は[パイプライン](#パイプライン)を参照してください。
 
-## 配信データ
+## 配布データ（GitHub Releases）
 
-PMTiles は Cloudflare R2 で配信しています。
+変換済みのデータは [GitHub Releases](../../releases/latest) で配布しています。変換パイプラインを実行せずに使いたい場合はここから取得してください。収録物・件数・SHA256 はリリースの説明にあります。
+
+| ファイル | 形式 | 中身 |
+|---|---|---|
+| `shindo_hypocenter.csv.gz` / `.parquet` / `.pmtiles` | CSV(UTF-8) / GeoParquet / PMTiles | 震源（有感）221,005件 |
+| `shindo_intensity.csv.gz` / `.parquet` / `.pmtiles` | 同上 | 観測点ごとの震度 2,064,679件 |
+| `hypo_catalog.csv.gz` / `.parquet` | CSV(UTF-8) / GeoParquet | 震源（有感・無感とも）5,326,333件 |
+| `SHA256SUMS.txt` | — | 整合性検証用 |
+
+```bash
+gh release download -R shiwaku/jma-earthquake-data-converter -p 'hypo_catalog.parquet'
+```
+
+GeoParquet はジオメトリが Point（WKB）、CRS は EPSG:4326 です。`地震ID` と `観測点番号` は文字列です。座標が欠損している行と座標 0,0 の行は除いてあります（CSV には残っています）。
+
+## 配信データ（Web地図向け）
+
+PMTiles と MLT は Cloudflare R2 で配信しています。GitHub Releases のアセットは CORS ヘッダを返さないため、Web 地図からはこちらを使ってください。
 
 | データ | URL | サイズ |
 |---|---|---:|
-| 震源 | `https://shi-works.com/pmtiles/jma-earthquake/hypocenter_convert.pmtiles` | 56MB |
-| 震度 | `https://shi-works.com/pmtiles/jma-earthquake/shindo_convert.pmtiles` | 271MB |
+| 震源（有感） | `https://shi-works.com/pmtiles/jma-earthquake/shindo_hypocenter.pmtiles` | 58MB |
+| 震度 | `https://shi-works.com/pmtiles/jma-earthquake/shindo_intensity.pmtiles` | 289MB |
 | 人口集中地区（2020年） | `https://shi-works.com/pmtiles/r2DID/2020_did_ddsw_01-47_JGD2011.pmtiles` | 12.7MB |
 
 MLT は震源の立体表示に使っています。z/x/y のディレクトリ構成で配信しています。
 
-| データ | URL | ズーム |
-|---|---|---|
-| 震源（有感のみ） | `https://shi-works.com/mlt/jma-earthquake/{z}/{x}/{y}.mlt` | 0〜8 |
-| 震源（無感含む） | `https://shi-works.com/mlt/jma-hypocenter-unfelt/{z}/{x}/{y}.mlt` | 0〜10 |
+| データ | URL | ズーム | source-layer |
+|---|---|---|---|
+| 震源（有感） | `https://shi-works.com/mlt/jma-earthquake/shindo-hypocenter/{z}/{x}/{y}.mlt` | 0〜8 | `shindo_hypocenter` |
+| 震源（無感のみ） | `https://shi-works.com/mlt/jma-earthquake/hypo-unfelt/{z}/{x}/{y}.mlt` | 0〜10 | `hypo_unfelt` |
 
 PMTiles は [PMTiles Viewer](https://protomaps.github.io/PMTiles/) でも閲覧できます。
 
-中間生成物（CSV・GeoParquet）は配布していません。上のクイックスタートで生成するか、`run-pipeline.yml` を手動実行すると GitHub Releases に公開されます。`shindo_convert.csv` は203MBあり、GitHubのファイルサイズ上限（100MB）を超えるためリポジトリには含められません。
+> [!NOTE]
+> 2026年10月に名前を変えました。旧 URL（`hypocenter_convert.pmtiles`・`shindo_convert.pmtiles`・`mlt/jma-earthquake/{z}/{x}/{y}.mlt`・`mlt/jma-hypocenter-unfelt/`）は外部からの参照を切らないよう残してありますが、**1919〜2022年（無感は2023年）のまま更新しません**。
 
 ## パイプライン
 
 ### 震度観測点一覧を読みやすい形式へ（`code_p2csv.py`）
 
-観測点一覧（datファイル）をCSVに変換します。入力の文字コードは自動判定します（2022年配信分から Shift-JIS → EUC-JP に変更されました）。
+観測点一覧（datファイル）をCSVに変換します。入力の文字コードは自動判定します（Shift-JIS → 2022年配信分から EUC-JP → 2026年10月配信分から UTF-8 と変わっています）。
 
 - 入力: [`data/code_p.dat`](data/code_p.dat)
 - 出力: [`data/code_p.csv`](data/code_p.csv)
 
 ### 震源データ・震度データの抽出（`dat_converter.py`）
 
-震度データ（datファイル）から震源データと震度データを抽出します。
+震度データ（`shindo_dat/i*.dat`）から震源レコードと震度レコードを抽出し、`shindo_hypocenter_raw.csv` と `shindo_intensity_raw.csv` に書き出します。
+
+- 文字コードはファイルごとに判定します。2022年までは Shift-JIS、2023年からは EUC-JP です。漢字はどちらも2バイトなので、固定長の桁位置は変わりません
 
 - 震源データは1番上のレコードが代表値（採用値）で、本プログラムは代表値のみ出力します
 - 震源データの西暦・月・日・時・分・秒から**地震ID**を作り、震源データと震度データの双方に付与します
 
 > [!NOTE]
-> 地震IDは一意ではありません。214,763件に対し異なるIDは208,552個で、5,406個が重複します。IDが発生時刻 `YYYYMMDDhhmmss` そのものであるため、同じ秒に決定された別レコードが衝突します。
+> 地震IDは一意ではありません。221,005件に対し異なるIDは214,794個で、5,406個が重複します。IDが発生時刻 `YYYYMMDDhhmmss` そのものであるため、同じ秒に決定された別レコードが衝突します。
 
 ### 震源データを読みやすい形式へ（`hypocenter_converter.py`）
 
@@ -237,9 +279,12 @@ PMTiles は [PMTiles Viewer](https://protomaps.github.io/PMTiles/) でも閲覧�
 ### GeoParquet形式へ変換
 
 ```bash
-python src/csv2geoparquet.py hypocenter_convert.csv hypocenter_convert.parquet --lon Longitude --lat Latitude
-python src/csv2geoparquet.py shindo_convert.csv shindo_convert.parquet --lon 観測点経度 --lat 観測点緯度
+python src/csv2geoparquet.py shindo_hypocenter.csv shindo_hypocenter.parquet --lon Longitude --lat Latitude --string 地震ID
+python src/csv2geoparquet.py shindo_intensity.csv shindo_intensity.parquet --lon 観測点経度 --lat 観測点緯度 --string 地震ID --string 観測点番号
+python src/csv2geoparquet.py hypo_catalog.csv hypo_catalog.parquet --lon Longitude --lat Latitude --string 地震ID
 ```
+
+`--string` を付けた列は数値に推定させず文字列のまま出します。地震IDはタイルやビューワと同じく文字列で扱います。
 
 `ogr2ogr` でも変換できますが、GDALのビルドによってはParquetドライバが含まれないため、GitHub Actionsではgeopandas版を使っています。
 
@@ -247,8 +292,8 @@ python src/csv2geoparquet.py shindo_convert.csv shindo_convert.parquet --lon 観
 <summary>ogr2ogr を使う場合</summary>
 
 ```bash
-ogr2ogr -f "Parquet" hypocenter_convert.parquet hypocenter_convert.csv -oo X_POSSIBLE_NAMES=Longitude -oo Y_POSSIBLE_NAMES=Latitude -s_srs EPSG:4326 -t_srs EPSG:4326
-ogr2ogr -f "Parquet" shindo_convert.parquet shindo_convert.csv -oo X_POSSIBLE_NAMES=観測点経度 -oo Y_POSSIBLE_NAMES=観測点緯度 -s_srs EPSG:4326 -t_srs EPSG:4326
+ogr2ogr -f "Parquet" shindo_hypocenter.parquet shindo_hypocenter.csv -oo X_POSSIBLE_NAMES=Longitude -oo Y_POSSIBLE_NAMES=Latitude -s_srs EPSG:4326 -t_srs EPSG:4326
+ogr2ogr -f "Parquet" shindo_intensity.parquet shindo_intensity.csv -oo X_POSSIBLE_NAMES=観測点経度 -oo Y_POSSIBLE_NAMES=観測点緯度 -s_srs EPSG:4326 -t_srs EPSG:4326
 ```
 </details>
 
@@ -257,17 +302,17 @@ ogr2ogr -f "Parquet" shindo_convert.parquet shindo_convert.csv -oo X_POSSIBLE_NA
 行区切りGeoJSONを作り、[feltのtippecanoe](https://github.com/felt/tippecanoe)に通します。
 
 ```bash
-python src/csv2geojsonseq.py hypocenter_convert.csv hypocenter_convert.geojsonl --lon Longitude --lat Latitude
-python src/csv2geojsonseq.py shindo_convert.csv shindo_convert.geojsonl --lon 観測点経度 --lat 観測点緯度
+python src/csv2geojsonseq.py shindo_hypocenter.csv shindo_hypocenter.geojsonl --lon Longitude --lat Latitude --number '深さ(km)' --number マグニチュード1 --number マグニチュード2 --number 観測点数 --number UnixTime
+python src/csv2geojsonseq.py shindo_intensity.csv shindo_intensity.geojsonl --lon 観測点経度 --lat 観測点緯度 --number '震度（計測値）'
 
-tippecanoe -zg -o hypocenter_convert.pmtiles -r1 -pf -pk -l hypocenter_convert hypocenter_convert.geojsonl
-tippecanoe -zg -B7 -rg -o shindo_convert.pmtiles -r1 -d8 -pf -pk -l shindo_convert shindo_convert.geojsonl
+tippecanoe -zg -o shindo_hypocenter.pmtiles -l shindo_hypocenter -r1 -pf -pk -P shindo_hypocenter.geojsonl
+tippecanoe -zg -B7 -rg -o shindo_intensity.pmtiles -l shindo_intensity -r1 -d8 -pf -pk -P shindo_intensity.geojsonl
 ```
 
 > [!IMPORTANT]
 > - **地震IDを数値化しないこと**。ビューワが `['==', ['get','地震ID'], '19230901115831']` と文字列で比較します。`csv2geojsonseq.py` は既定で全列を文字列にし、`--number` を付けた列だけ数値にします。
-> - **`-r1 -pf -pk` を外さないこと**。震源は点の密度そのものが情報です。`-ad` を使うと密なタイルで9割以上の地物が捨てられます。これは有感（21万点）の話で、無感（494万点）は間引かないとタイルが巨大になるため別扱いです（[震源データの変換](#震源データの変換)を参照）。
-> - `-l` でレイヤー名を明示すること。ビューワの `source-layer`（`hypocenter_convert` / `shindo_convert`）と一致させる必要があります。
+> - **`-r1 -pf -pk` を外さないこと**。震源は点の密度そのものが情報です。`-ad` を使うと密なタイルで9割以上の地物が捨てられます。これは有感（22万点）の話で、無感（519万点）は間引かないとタイルが巨大になるため別扱いです（[震源データの変換](#震源データの変換)を参照）。
+> - `-l` でレイヤー名を明示すること。ビューワの `source-layer`（`shindo_hypocenter` / `shindo_intensity`）と一致させる必要があります。
 
 ## ビューワ（`viewer/`）
 
@@ -279,7 +324,7 @@ Vite + TypeScript + MapLibre GL JS 6 + deck.gl 9 で構築しています。
 
 現在有効な機能:
 
-- 震源の**深さを色で表します**。参考実装 [nagix/japan-eq-locator](https://github.com/nagix/japan-eq-locator) に合わせ、**0〜500kmを線形**に ColorBrewer の Spectral で塗ります（`d3.scaleSequential([0, -500000], d3.interpolateSpectral)` と同じ）。500kmより深いものは端の色になります。実データは浅部に強く偏っている（中央値14km・95%が84kmより浅い・最大698km）ため大半は赤〜橙に収まりますが、沈み込むプレートの形は青〜紫ではっきり分かれます。配色の出どころは `viewer/src/map/layers/depthScale.ts` 1か所です
+- 震源の**深さを色で表します**。参考実装 [nagix/japan-eq-locator](https://github.com/nagix/japan-eq-locator) に合わせ、**0〜500kmを線形**に ColorBrewer の Spectral で塗ります（`d3.scaleSequential([0, -500000], d3.interpolateSpectral)` と同じ）。500kmより深いものは端の色になります。実データは浅部に強く偏っている（中央値14km・95%が83kmより浅い・最大698km）ため大半は赤〜橙に収まりますが、沈み込むプレートの形は青〜紫ではっきり分かれます。配色の出どころは `viewer/src/map/layers/depthScale.ts` 1か所です
 - 地図を傾けると深さの凡例が出ます（切替ボタンは持たず、傾きに連動します）
 - ダークモード、背景地図の切替（地理院 淡色 / 全国最新写真）
 - 震源をクリックすると発生時刻・深さ・マグニチュードが出ます
@@ -288,7 +333,7 @@ Vite + TypeScript + MapLibre GL JS 6 + deck.gl 9 で構築しています。
 
 レイヤーを戻すと有効になる機能:
 
-- **最大震度3以上の15,480件**から震央地名・年月日・M・震度で検索できます（`熊本 M7`、`2011-3-11`、`震度6弱 大阪` のようにAND指定可）
+- **最大震度3以上の16,128件**から震央地名・年月日・M・震度で検索できます（`熊本 M7`、`2011-3-11`、`震度6弱 大阪` のようにAND指定可）
 - 地震ごとに「強く揺れた範囲」を索引に持たせ、選ぶとその範囲へカメラが寄ります
 - クリックで観測点・震源の属性表示
 - 地震の選択はパネルの外の常設バーに置いてあり、パネルを畳んでも切り替えられます
@@ -296,7 +341,7 @@ Vite + TypeScript + MapLibre GL JS 6 + deck.gl 9 で構築しています。
 検索の索引は `src/build_event_index.py` が生成します。
 
 ```bash
-python src/build_event_index.py hypocenter_convert.csv viewer/public/events.json --shindo-csv shindo_convert.csv
+python src/build_event_index.py shindo_hypocenter.csv viewer/public/events.json --shindo-csv shindo_intensity.csv
 ```
 
 PMTilesの配置場所は `viewer/.env` の `VITE_PMTILES_BASE` で切り替えられます。震源・震度・人口集中地区の3つともこの1行で切り替わります。
@@ -305,11 +350,13 @@ PMTilesの配置場所は `viewer/.env` の `VITE_PMTILES_BASE` で切り替え�
 
 | ワークフロー | 起動 | 内容 |
 |---|---|---|
-| `check-jma-updates.yml` | 毎月1日 09:00 JST | 配信状況を `data/jma_manifest.json` と照合し、差分があればIssueに起票 |
-| `run-pipeline.yml` | 手動 | DL→変換→GeoParquet→PMTiles。成果物をReleasesへ公開 |
+| `check-jma-updates.yml` | 毎月1日 09:00 JST | 震度データ・震源データの配信状況を `data/jma_manifest.json` と照合し、差分があればIssueに起票 |
+| `run-pipeline.yml` | 手動 | DL→変換→GeoParquet→PMTiles。タグを指定すると成果物をReleasesへ公開 |
 | `deploy-pages.yml` | `viewer/**` の更新時 | ビューワをビルドしてGitHub Pagesへ公開 |
 
-定期実行は**検知のみ**です。変換自体は気象庁側の仕様変更を確認してから手動で流す想定です。
+定期実行は**検知のみ**です。変換自体は気象庁側の仕様変更を確認してから手動で流す想定です。実際、2026年10月の更新では震度データの文字コードが2023年分から EUC-JP に、観測点一覧が UTF-8 に変わっていました。
+
+MLT タイルの生成（Java が要る）と R2 へのアップロードはワークフローに含めていません。手元で `build_mlt_tiles.sh` / `build_unfelt_mlt_tiles.sh` を流します。
 
 ## MLT（MapLibre Tile）形式
 
@@ -320,7 +367,7 @@ PMTilesの配置場所は `viewer/.env` の `VITE_PMTILES_BASE` で切り替え�
 
 
 ```bash
-bash src/build_mlt_tiles.sh work/hypocenter_convert.csv work/mlt
+bash src/build_mlt_tiles.sh work/shindo_hypocenter.csv work/mlt-shindo-hypocenter
 ```
 
 MLTへは**MVTを経由します**。参考実装のEncode CLIがMVTを入力に取るトランスコーダで、タイル自体は作れないためです。エンコーダは [maplibre-tile-spec](https://github.com/maplibre/maplibre-tile-spec) から自前でビルドします（Java 21以上。17では不可）。
@@ -330,7 +377,9 @@ git clone --depth=1 https://github.com/maplibre/maplibre-tile-spec.git ~/mlt-spe
 cd ~/mlt-spec/java && chmod +x gradlew && ./gradlew cli
 ```
 
-### 計測結果（震源214,639件・z0-8・495タイル・間引きなし）
+配信中のタイル（1919〜2024年・220,881件・7列）は **497枚・111.1MB**（MVT非圧縮 169.8MB）です。
+
+### 計測結果（1919〜2022年版・震源214,639件・5列・z0-8・495タイル・間引きなし）
 
 | 形式 | サイズ | MVT非圧縮比 |
 |---|---:|---:|

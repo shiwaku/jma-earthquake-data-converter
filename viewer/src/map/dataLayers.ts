@@ -103,7 +103,7 @@ export function createDataLayers(map: MapLibreMap, store: AppStore): void {
     }
   }
 
-  /** 表示中の地震を切り替える。震源は214,763件あり属性化できないためフィルタで絞る。 */
+  /** 表示中の地震を切り替える。震源は221,005件あり属性化できないためフィルタで絞る。 */
   function applyFilter(): void {
     const state = store.get()
     for (const mod of LAYERS) {

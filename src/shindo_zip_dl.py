@@ -16,7 +16,7 @@ import requests
 
 from check_updates import BASE_URL, list_remote_files
 
-DOWNLOAD_FOLDER = './zip'
+DOWNLOAD_FOLDER = './shindo_zip'
 
 
 def parse_args():

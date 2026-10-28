@@ -87,7 +87,7 @@ export interface LayerModule {
   /**
    * 地震の切替に伴うフィルタ更新。
    * 参考にした信号ビューワは属性を24時間分持たせてpaint式だけで切り替えているが、
-   * 震源は214,763件あり属性化できないため、こちらは地震IDでのsetFilterが必須になる。
+   * 震源は221,005件あり属性化できないため、こちらは地震IDでのsetFilterが必須になる。
    */
   filters(ctx: RenderContext): FilterUpdate[]
   legend(ctx: RenderContext): Legend

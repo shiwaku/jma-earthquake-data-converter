@@ -1,7 +1,7 @@
 """震源CSV・震度CSVからビューワの検索用インデックス（events.json）を作る。
 
-  python src/build_event_index.py work/hypocenter_convert.csv viewer/public/events.json \
-      --shindo-csv work/shindo_convert.csv --min-shindo 3
+  python src/build_event_index.py work/shindo_hypocenter.csv viewer/public/events.json \
+      --shindo-csv work/shindo_intensity.csv --min-shindo 3
 
 旧ビューワは表示できる地震が14件のハードコードだった。その解消のために、
 震源データ全件（214,763件）から「地図に出す意味のある地震」だけを抜き出す。
