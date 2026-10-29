@@ -240,7 +240,7 @@ MLT は震源の立体表示に使っています。z/x/y のディレクトリ�
 PMTiles は [PMTiles Viewer](https://protomaps.github.io/PMTiles/) でも閲覧できます。
 
 > [!NOTE]
-> 2026年10月に名前を変えました。旧 URL（`hypocenter_convert.pmtiles`・`shindo_convert.pmtiles`・`mlt/jma-earthquake/{z}/{x}/{y}.mlt`・`mlt/jma-hypocenter-unfelt/`）は外部からの参照を切らないよう残してありますが、**1919〜2022年（無感は2023年）のまま更新しません**。
+> 2026年10月に名前を変えました。旧 URL（`hypocenter_convert.pmtiles`・`shindo_convert.pmtiles`・`mlt/jma-earthquake/{z}/{x}/{y}.mlt`・`mlt/jma-hypocenter-unfelt/`）と旧ビューワ（`/legacy/`）は削除済みです。
 
 ## パイプライン
 
