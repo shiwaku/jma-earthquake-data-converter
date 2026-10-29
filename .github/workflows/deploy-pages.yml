@@ -39,13 +39,6 @@ jobs:
         working-directory: viewer
         run: npm run build
 
-      # 旧ビューワ（リポジトリ直下の index.html）を残す。
-      # 従来こちらがサイトのトップとして公開されており、外部からの参照がある。
-      - name: 旧ビューワを /legacy/ に退避
-        run: |
-          mkdir -p viewer/dist/legacy
-          cp index.html viewer/dist/legacy/index.html
-
       - uses: actions/configure-pages@v5
 
       - uses: actions/upload-pages-artifact@v3
